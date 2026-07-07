@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <stdint.h>
 #if defined(_WIN32)
 # define BF_EXPORT __declspec(dllexport)
 #else
@@ -560,6 +561,48 @@ err:
     return okm_len;
 }
 
+BF_EXPORT int _scrypt(unsigned char *pass, size_t pass_len, unsigned char *salt, size_t salt_len, uint64_t n, uint32_t r, uint32_t p, uint64_t maxmem, unsigned char **okm, size_t okm_len)
+{
+    EVP_KDF *kdf = NULL;
+    EVP_KDF_CTX *kctx = NULL;
+    OSSL_PARAM params[7], *param_ptr = params;
+
+    if ((kdf = EVP_KDF_fetch(NULL, "SCRYPT", NULL)) == NULL) {
+        goto err;
+    }
+    kctx = EVP_KDF_CTX_new(kdf);
+    if (kctx == NULL) {
+        goto err;
+    }
+
+    *param_ptr++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_PASSWORD, pass, pass_len);
+    *param_ptr++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_SALT, salt, salt_len);
+    *param_ptr++ = OSSL_PARAM_construct_uint64(OSSL_KDF_PARAM_SCRYPT_N, &n);
+    *param_ptr++ = OSSL_PARAM_construct_uint32(OSSL_KDF_PARAM_SCRYPT_R, &r);
+    *param_ptr++ = OSSL_PARAM_construct_uint32(OSSL_KDF_PARAM_SCRYPT_P, &p);
+    if (maxmem > 0) {
+        *param_ptr++ = OSSL_PARAM_construct_uint64(OSSL_KDF_PARAM_SCRYPT_MAXMEM, &maxmem);
+    }
+    *param_ptr = OSSL_PARAM_construct_end();
+
+    if (EVP_KDF_CTX_set_params(kctx, params) <= 0) {
+        goto err;
+    }
+
+    *okm = OPENSSL_malloc(okm_len);
+    if (EVP_KDF_derive(kctx, *okm, okm_len, NULL) <= 0) {
+        OPENSSL_free(*okm);
+        okm_len = -1;
+        goto err;
+    }
+
+err:
+    EVP_KDF_CTX_free(kctx);
+    EVP_KDF_free(kdf);
+
+    return okm_len;
+}
+
 BF_EXPORT unsigned char* _ecdh(EVP_PKEY *priv, EVP_PKEY *peer_pub, size_t *z_len_ptr)
 {
     unsigned char* z=NULL;
@@ -853,7 +896,7 @@ BF_EXPORT unsigned char* write_pubkey_to_pem(unsigned char* dst_fname, EVP_PKEY 
     return dst_fname;
 }
 
-BF_EXPORT int _ecdsa_sign(EVP_PKEY *priv_key, const char *sig_name, char *msg, int msg_len, unsigned char **sig)
+BF_EXPORT int _ecdsa_sign(EVP_PKEY *priv_key, const char *digest_name, char *msg, int msg_len, unsigned char **sig)
 {
 
     const char *propq = NULL;
@@ -865,7 +908,7 @@ BF_EXPORT int _ecdsa_sign(EVP_PKEY *priv_key, const char *sig_name, char *msg, i
     libctx = OSSL_LIB_CTX_new();
     sign_context = EVP_MD_CTX_new();
 
-    EVP_DigestSignInit_ex(sign_context, NULL, sig_name, libctx, NULL, priv_key, NULL); 
+    EVP_DigestSignInit_ex(sign_context, NULL, digest_name, libctx, NULL, priv_key, NULL); 
 
     EVP_DigestSignUpdate(sign_context, msg, msg_len); 
 
@@ -884,7 +927,7 @@ BF_EXPORT int _ecdsa_sign(EVP_PKEY *priv_key, const char *sig_name, char *msg, i
     return sig_len;
 }
 
-BF_EXPORT int _ecdsa_verify(EVP_PKEY *pub_key, const char *sig_name, char *msg, int msg_len, unsigned char *sig, int sig_len)
+BF_EXPORT int _ecdsa_verify(EVP_PKEY *pub_key, const char *digest_name, char *msg, int msg_len, unsigned char *sig, int sig_len)
 {
 
     const char *propq = NULL;
@@ -895,7 +938,7 @@ BF_EXPORT int _ecdsa_verify(EVP_PKEY *pub_key, const char *sig_name, char *msg, 
     libctx = OSSL_LIB_CTX_new();
     verify_context = EVP_MD_CTX_new();
 
-    EVP_DigestVerifyInit_ex(verify_context, NULL, sig_name, libctx, NULL, pub_key, NULL); 
+    EVP_DigestVerifyInit_ex(verify_context, NULL, digest_name, libctx, NULL, pub_key, NULL); 
 
     EVP_DigestVerifyUpdate(verify_context, msg, msg_len); 
 

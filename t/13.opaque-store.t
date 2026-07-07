@@ -3,13 +3,13 @@ use warnings;
 
 use lib '../lib';
 
-use Digest::SHA qw/hmac_sha256 sha256/;
+#use Digest::SHA qw/hmac_sha256 sha256/;
 
 use Test::More ;
 use Crypt::OpenSSL::EC;
 use Crypt::OpenSSL::Bignum;
 use Crypto::Utils::OpenSSL;
-use Crypto::Utils::OpenSSL;
+
 use Crypto::Utils::OPRF;
 use Crypto::Utils::OPAQUE;
 
@@ -52,7 +52,7 @@ my $Nseed = 32;
 #my $Nn = 32;
 my $Nn  = Crypt::OpenSSL::Bignum->new_from_hex('a921f2a014513bd8a90e477a629794e89fec12d12206dde662ebdcf65670e51f');
 
-my $store_r = store($randomized_pwd, $s_pub, $s_id, $c_id, $Nn, $Nseed, $group_name, $info, $DST, $hash_name, $expand_message_func, \&hmac_sha256);
+my $store_r = store($randomized_pwd, $s_pub, $s_id, $c_id, $Nn, $Nseed, $group_name, $info, $DST, $hash_name, $expand_message_func, sub { hmac('SHA256', $_[1], $_[0]) });
 ### auth_tag: unpack("H*", $store_r->{envelope}{auth_tag})
 ### envelope_nonce: unpack("H*", $store_r->{envelope}{nonce})
 ### export_key: unpack("H*", $store_r->{export_key})
@@ -64,7 +64,7 @@ is(unpack("H*", $store_r->{export_key}), '77869b0d11debf6fc88c1d192dde9546baf528
 
 is(unpack("H*", $store_r->{envelope}{auth_tag}), 'fea1d1f93f65896f14c0805f6fda165dbaad00212b8b27bcc988222866713ba2', 'store: auth_tag');
 
-my $recover_r = recover($randomized_pwd, $s_pub, $store_r->{envelope}, $s_id, $c_id, $Nseed, $group_name, $info, $DST, $hash_name, $expand_message_func, \&hmac_sha256);
+my $recover_r = recover($randomized_pwd, $s_pub, $store_r->{envelope}, $s_id, $c_id, $Nseed, $group_name, $info, $DST, $hash_name, $expand_message_func, sub { hmac('SHA256', $_[1], $_[0]) });
 is(unpack("H*", $recover_r->{export_key}), '77869b0d11debf6fc88c1d192dde9546baf528b2f70c2aea89960fc2178586da', 'recover: export_key');
 is($recover_r->{c_priv}->to_hex, 'D1D280F712E4EBF3C881C686E13C281BC3A3FAB30A00411A350F4F8B7A1EA550', 'recover: priv');
 

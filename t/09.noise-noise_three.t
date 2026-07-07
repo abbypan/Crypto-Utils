@@ -15,7 +15,7 @@ use Crypto::Utils::OpenSSL;
 use Crypto::Utils::Noise;
 
 use CBOR::XS;
-use Digest::SHA qw/hmac_sha256 sha256/;
+#use Digest::SHA qw/hmac_sha256 sha256/;
 #use Crypt::AuthEnc::GCM qw(gcm_encrypt_authenticate gcm_decrypt_verify);
 use FindBin;
 use POSIX qw/strftime/;
@@ -25,10 +25,10 @@ our $noise_conf = {
   #group_name             => 'secp256r1',
 
   hash_name => 'SHA256',
-  hash_func => \&sha256,
+  hash_func => sub { digest('SHA256', @_) },
   hash_len  => 32,
 
-  cipher_name => 'AESGCM',
+  cipher_name => 'aes-256-gcm',
   enc_func    => sub {                 #encrypt: key, iv, aad, plaintext  -> ciphertext, authtag
     ### enc: scalar(@_)
     ### key, iv, aad, plain, ciphertext, tag
@@ -192,6 +192,7 @@ our $plain_b = 'anhui hefei 888';
         ### -----------end test --------: $pattern_name, $psk, $psk_id
     } ## end for my $psk_r ( @test_psk)
 } ## end for my $pattern_name ( ...)
+
 
 done_testing;
 

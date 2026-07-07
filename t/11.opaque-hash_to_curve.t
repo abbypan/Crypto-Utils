@@ -4,7 +4,7 @@ use warnings;
 use Test::More ;
 use Crypt::OpenSSL::EC;
 use Crypt::OpenSSL::Bignum;
-use Crypto::Utils::OpenSSL ;
+
 use Crypto::Utils::OpenSSL;
 #use Data::Dump qw/dump/;
 

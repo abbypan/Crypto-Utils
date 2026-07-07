@@ -11,7 +11,6 @@ use List::Util qw/min/;
 use Crypt::OpenSSL::EC;
 use Crypt::OpenSSL::Bignum;
 use Crypto::Utils::OpenSSL;
-use Crypto::Utils::OpenSSL;
 use Crypto::Utils::CPace ;
 
 my $DSI = 'CPaceP256_XMD:SHA-256_SSWU_NU_';

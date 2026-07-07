@@ -2,7 +2,7 @@
 #spake2plus: https://www.potaroo.net/ietf/ids/draft-bar-cfrg-spake2plus-03.html
 use strict;
 use warnings;
-use bigint;
+#use bigint;
 use Test::More;
 
 #use Smart::Comments;
@@ -10,16 +10,15 @@ use Test::More;
 use lib '../lib';
 use Crypto::Utils::SPAKE2Plus;
 use Crypto::Utils::OpenSSL;
-use Digest::CMAC;
+#use Digest::CMAC;
 
 
 my $spake2plus = Crypto::Utils::SPAKE2Plus->new(
     curve_name => 'prime256v1',
     mac=> sub {
         my ($key, $data) = @_;
-        my $omac1 = Digest::CMAC->new($key);
-        $omac1->add($data);
-        return pack("H*", $omac1->hexdigest);
+        my $cipher = length($key) == 32 ? 'aes-256-cbc' : 'aes-128-cbc';
+        return aes_cmac($cipher, $key, $data);
     },
 );
 

@@ -94,6 +94,7 @@ sn_point2hex
 generate_ec_key
 get_ec_params 
 digest
+scrypt
 );
 #aead_encrypt_split
 
@@ -199,6 +200,7 @@ $ffi->attach( '_pkcs12_key_gen' => [ 'string', 'size_t', 'string', 'size_t', 'ui
 $ffi->attach( '_pkcs5_pbkdf2_hmac' => [ 'string', 'size_t', 'string', 'size_t', 'uint', 'string', 'size_t*' ] => 'opaque' );
 $ffi->attach( '_hmac' => [ 'string', 'string', 'size_t', 'string', 'size_t', 'opaque*' ] => 'int' );
 $ffi->attach( '_hkdf' => [ 'int', 'string', 'string', 'size_t', 'string', 'size_t', 'string', 'size_t', 'opaque*', 'size_t' ] => 'int' );
+$ffi->attach( '_scrypt' => [ 'string', 'size_t', 'string', 'size_t', 'uint64', 'uint32', 'uint32', 'uint64', 'opaque*', 'size_t' ] => 'int' );
 $ffi->attach( '_ecdh' => [ 'opaque', 'opaque', 'size_t*' ] => 'opaque' );
 $ffi->attach( 'mul_ec_point' => [ 'string', 'opaque', 'opaque', 'opaque' ] => 'opaque' );
 $ffi->attach( 'gen_ec_point' => [ 'string', 'opaque', 'opaque', 'int' ] => 'opaque' );
@@ -397,18 +399,18 @@ sub digest_array {
 }
 
 sub ecdsa_sign {
-    my ( $priv_key, $sig_name, $msg ) = @_;
+    my ( $priv_key, $digest_name, $msg ) = @_;
     $msg //= '';
     my $ptr;
-    my $len = _ecdsa_sign( _ptr($priv_key), $sig_name, $msg, length($msg), \$ptr );
+    my $len = _ecdsa_sign( _ptr($priv_key), $digest_name, $msg, length($msg), \$ptr );
     return _bytes_from_ptr( $ptr, $len );
 }
 
 sub ecdsa_verify {
-    my ( $pub_key, $sig_name, $msg, $sig ) = @_;
+    my ( $pub_key, $digest_name, $msg, $sig ) = @_;
     $msg //= '';
     $sig //= '';
-    return _ecdsa_verify( _ptr($pub_key), $sig_name, $msg, length($msg), $sig, length($sig) );
+    return _ecdsa_verify( _ptr($pub_key), $digest_name, $msg, length($msg), $sig, length($sig) );
 }
 
 sub symmetric_encrypt {
@@ -498,6 +500,23 @@ sub hkdf_extract {
 sub hkdf_expand {
     my ($digest_name, $k, $salt, $info, $len) = @_;
     return hkdf_main(2, $digest_name, $k, $salt, $info, $len);
+}
+
+sub scrypt {
+    my ( $password, $salt, $n, $r, $p, $len, $maxmem ) = @_;
+    $password //= '';
+    $salt     //= '';
+    $n        //= 32768;
+    $r        //= 8;
+    $p        //= 1;
+    $len      //= 64;
+    $maxmem   //= 0;
+    my $ptr;
+    my $res_len = _scrypt( $password, length($password), $salt, length($salt), $n, $r, $p, $maxmem, \$ptr, $len );
+    if ( $res_len < 0 ) {
+        croak "scrypt failed";
+    }
+    return _bytes_from_ptr( $ptr, $res_len );
 }
 
 
@@ -895,6 +914,14 @@ see also openssl/crypto/evp/p5_crpt2.c
 
     my $pbkdf2_key = pkcs5_pbkdf2_hmac('123456', pack("H*", 'b698314b0d68bcbd'), 2048, 'sha256');
     print unpack("H*", $pbkdf2_key), "\n";
+
+=head3 scrypt
+
+RFC7914 : Scrypt
+
+    my $key = scrypt($password, $salt, $n, $r, $p, $len, $maxmem)
+
+    my $key = scrypt('password', 'salt', 16384, 8, 1, 64);
 
 =head2 bignum
 

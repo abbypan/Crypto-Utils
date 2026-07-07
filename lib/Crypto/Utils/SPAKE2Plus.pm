@@ -9,7 +9,7 @@ use warnings;
 #use Crypt::Digest qw/digest_data/;
 #use Crypt::Mac::HMAC qw/hmac/;
 
-use Crypt::ScryptKDF qw/scrypt_raw/;
+#use Crypt::ScryptKDF qw/scrypt_raw/;
 use Crypto::Utils::OpenSSL;
 use Crypt::OpenSSL::EC;
 use Crypt::OpenSSL::Bignum;
@@ -79,7 +79,7 @@ sub new {
     my ( $key, @args ) = @_;
 
     #scrypt_raw($password, $salt, $N, $r, $p, $len);
-    scrypt_raw( $key, @args );
+    scrypt( $key, @args );
   };
 
   bless \%opt, $class;
@@ -367,15 +367,15 @@ L<https://www.potaroo.net/ietf/ids/draft-bar-cfrg-spake2plus-03.html>
     my $B = 'server';
 
     #bigint: w0, w1
-    my $w0 = Crypt::Perl::BigInt->from_hex( 'e6887cf9bdfb7579c69bf47928a84514b5e355ac034863f7ffaf4390e67d798c' );
-    my $w1 = Crypt::Perl::BigInt->from_hex( '24b5ae4abda868ec9336ffc3b78ee31c5755bef1759227ef5372ca139b94e512' );
+    my $w0 = Crypt::OpenSSL::Bignum->new_from_hex( 'e6887cf9bdfb7579c69bf47928a84514b5e355ac034863f7ffaf4390e67d798c' );
+    my $w1 = Crypt::OpenSSL::Bignum->new_from_hex( '24b5ae4abda868ec9336ffc3b78ee31c5755bef1759227ef5372ca139b94e512' );
 
 
 =head1 FUNCTION
 
 =head2 new 
 
-Curve Name: L<Crypt::Perl::ECDSA::EC::CurvesDB>
+Curve Name: prime256v1, etc.
 
     my $sp = Crypt::SPAKE2Plus->new(
         curve_name => 'prime256v1',

@@ -18,13 +18,13 @@ use CBOR::XS;
 use Crypto::Utils::SIGMA;
 
 #use Crypt::KeyDerivation ':all';
-use Digest::SHA qw/hmac_sha256/;
-use Crypt::AuthEnc::GCM qw(gcm_encrypt_authenticate gcm_decrypt_verify);
+#use Digest::SHA qw/hmac_sha256/;
+#use Crypt::AuthEnc::GCM qw(gcm_encrypt_authenticate gcm_decrypt_verify);
 
 use Crypto::Utils::OpenSSL;
 use Crypt::OpenSSL::EC;
 use Crypt::OpenSSL::Bignum;
-use Crypt::OpenSSL::ECDSA;
+#use Crypt::OpenSSL::ECDSA;
 
 
 my $random_range     = Crypt::OpenSSL::Bignum->new_from_hex( join( "", ( 'f' ) x 32 ) );
@@ -38,18 +38,19 @@ my $point_compress_t = 2;
 my $enc_func = sub {
   my ( $ke, $plaintext) = @_;
   my $iv = Crypt::OpenSSL::Bignum->rand_range( $iv_range );
-  my ( $ciphertext, $tag ) = gcm_encrypt_authenticate( $cipher_name, $ke, $iv->to_bin, undef, $plaintext );
-
-  my $cipher_info_r = [ $iv->to_bin, $ciphertext, $tag ];
+  my $cipher = length($ke) == 32 ? 'aes-256-gcm' : 'aes-128-gcm';
+  my $res = aead_encrypt($cipher, $plaintext, '', $ke, $iv->to_bin, 16);
+  my $cipher_info_r = [ $iv->to_bin, @$res ];
   ### iv: $iv->to_hex
-  ### ciphertext: unpack("H*", $ciphertext)
-  ### tag: unpack("H*", $tag)
+  ### ciphertext: unpack("H*", $res->[0])
+  ### tag: unpack("H*", $res->[1])
   return $cipher_info_r;
 };
 
 my $dec_func = sub {
   my ( $ke, $iv, $ciphertext, $tag ) = @_;
-  my $plaintext = gcm_decrypt_verify( 'AES', $ke, $iv, undef, $ciphertext, $tag );
+  my $cipher = length($ke) == 32 ? 'aes-256-gcm' : 'aes-128-gcm';
+  my $plaintext = aead_decrypt($cipher, $ciphertext, '', $tag, $ke, $iv);
   ### iv: unpack("H*", $iv)
   ### ciphertext: unpack("H*", $ciphertext)
   ### tag: unpack("H*", $tag)
@@ -57,7 +58,7 @@ my $dec_func = sub {
   return $plaintext;
 };
 
-my $mac_func = \&hmac_sha256;
+my $mac_func = sub { hmac('SHA256', $_[1], $_[0]) };
 
 my $sig_verify_func = sub {
   my ( $tbs, $sig_r, $pkey_fname ) = @_;
@@ -217,7 +218,7 @@ my $a_ks = derive_ks( $a_recv_msg2_r->{derive_key}{z}, $na->to_bin, $a_recv_msg2
 
 is( $a_ks, $b_ks, 'sigma session key' );
 
-
+unlink($_) for glob("$Bin/sigma-ek*.pem");
 
 done_testing;
 
