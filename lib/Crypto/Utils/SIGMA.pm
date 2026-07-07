@@ -8,7 +8,7 @@ use warnings;
 require Exporter;
 
 use Carp;
-use Crypt::KeyDerivation ':all';
+#use Crypt::KeyDerivation ':all';
 
 use Crypto::Utils::OpenSSL;
 use Crypt::OpenSSL::EC;

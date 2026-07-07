@@ -17,7 +17,7 @@ use CBOR::XS;
 
 use Crypto::Utils::SIGMA;
 
-use Crypt::KeyDerivation ':all';
+#use Crypt::KeyDerivation ':all';
 use Digest::SHA qw/hmac_sha256/;
 use Crypt::AuthEnc::GCM qw(gcm_encrypt_authenticate gcm_decrypt_verify);
 

@@ -17,7 +17,7 @@ use Crypt::OpenSSL::Bignum;
 use Crypto::Utils::OpenSSL;
 
 use Storable qw(dclone);
-use Digest::HMAC qw(hmac);
+#use Digest::HMAC qw(hmac);
 #use Crypt::KeyDerivation ':all';
 use Carp;
 
@@ -204,15 +204,15 @@ sub noise_pattern {
 sub noise_hkdf {
   my ( $cnf, $chaining_key, $input_key_material, $num_outputs ) = @_;
 
-  my $temp_key = hmac( $input_key_material, $chaining_key, $cnf->{hash_func} );
+  my $temp_key = hmac( $cnf->{hash_name}, $chaining_key, $input_key_material );
 
-  my $out1 = hmac( pack( "H*", "01" ), $temp_key, $cnf->{hash_func} );
+  my $out1 = hmac( $cnf->{hash_name}, $temp_key, pack( "H*", "01" ) );
   return $out1 if ( $num_outputs == 1 );
 
-  my $out2 = hmac( $out1 || pack( "H*", "02" ), $temp_key, $cnf->{hash_func} );
+  my $out2 = hmac( $cnf->{hash_name}, $temp_key, $out1 || pack( "H*", "02" ) );
   return ( $out1, $out2 ) if ( $num_outputs == 2 );
 
-  my $out3 = hmac( $out2 || pack( "H*", "03" ), $temp_key, $cnf->{hash_func} );
+  my $out3 = hmac( $cnf->{hash_name}, $temp_key, $out2 || pack( "H*", "03" ) );
   return ( $out1, $out2, $out3 ) if ( $num_outputs == 3 );
 }
 

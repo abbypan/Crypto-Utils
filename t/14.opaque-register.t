@@ -19,7 +19,7 @@ use CBOR::XS;
 #use bignum;
 use FindBin qw($Bin);
 use Crypto::Utils::SIGMA;
-use Crypt::KeyDerivation ':all';
+#use Crypt::KeyDerivation ':all';
 use Crypt::AuthEnc::GCM qw(gcm_encrypt_authenticate gcm_decrypt_verify);
 
 #create RegistrationRequest: oprf_context(mode,suite,context_string), pwdU, blind, blinded_element, blinded_message, request.data

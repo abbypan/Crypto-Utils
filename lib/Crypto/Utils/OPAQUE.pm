@@ -7,7 +7,7 @@ use warnings;
 
 require Exporter;
 
-use Crypt::KeyDerivation ':all';
+#use Crypt::KeyDerivation ':all';
 
 use Carp;
 use Crypto::Utils::OpenSSL;
