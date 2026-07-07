@@ -66,7 +66,7 @@ is(unpack("H*", $store_r->{envelope}{auth_tag}), 'fea1d1f93f65896f14c0805f6fda16
 
 my $recover_r = recover($randomized_pwd, $s_pub, $store_r->{envelope}, $s_id, $c_id, $Nseed, $group_name, $info, $DST, $hash_name, $expand_message_func, sub { hmac('SHA256', $_[1], $_[0]) });
 is(unpack("H*", $recover_r->{export_key}), '77869b0d11debf6fc88c1d192dde9546baf528b2f70c2aea89960fc2178586da', 'recover: export_key');
-is($recover_r->{c_priv}->to_hex, 'D1D280F712E4EBF3C881C686E13C281BC3A3FAB30A00411A350F4F8B7A1EA550', 'recover: priv');
+is(BN_bn2hex($recover_r->{c_priv}), 'D1D280F712E4EBF3C881C686E13C281BC3A3FAB30A00411A350F4F8B7A1EA550', 'recover: priv');
 
 done_testing;
 1;

@@ -26,7 +26,7 @@ my $z = Crypt::OpenSSL::Bignum->new_from_decimal('-10');
 #print "a: $a_hex\n";
 #my $b_hex = $b->to_hex;
 #print "b: $b_hex\n";
-my $z_hex = $z->to_hex;
+my $z_hex = BN_bn2hex($z);
 print "z: $z_hex\n";
 
 my $u_hex = 'ea083a886a38ef4d15d95bd6a4b4d65620d3c57e4ed00e09fd2d67d67afd0797';
@@ -37,16 +37,16 @@ my $y = Crypt::OpenSSL::Bignum->zero;
 my $c1 = Crypt::OpenSSL::Bignum->zero;
 my $c2 = Crypt::OpenSSL::Bignum->zero;
 calc_c1_c2_for_sswu($c1, $c2, $p, $a, $b, $z, $ctx);
-my $c1_hex = $c1->to_hex;
+my $c1_hex = BN_bn2hex($c1);
 print "c1: $c1_hex\n";
-my $c2_hex = $c2->to_hex;
+my $c2_hex = BN_bn2hex($c2);
 print "c2: $c2_hex\n";
 
 map_to_curve_sswu_straight_line($c1, $c2, $p, $a, $b, $z, $u, $x, $y, $ctx);
 print "u: $u_hex\n";
-my $x_hex = $x->to_hex;
+my $x_hex = BN_bn2hex($x);
 print "x: $x_hex\n";
-my $y_hex = $y->to_hex;
+my $y_hex = BN_bn2hex($y);
 print "y: $y_hex\n";
 
 is($x_hex, "993B46E30BA9CFC3DC2D3AE2CF9733CF03994E74383C4E1B4A92E8D6D466B321", "x");

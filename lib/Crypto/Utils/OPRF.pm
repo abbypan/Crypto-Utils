@@ -78,7 +78,7 @@ sub derive_key_pair {
 
     #my $ec_key_r = generate_ec_key($ec_params_r->{group}, $skS, 2, $ec_params_r->{ctx});
     ### xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
-    my $ec_key_r = generate_ec_key($group_name, $skS->to_hex());
+    my $ec_key_r = generate_ec_key($group_name, BN_bn2hex($skS));
     ### yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
     use Data::Dumper;
     print Dumper($ec_key_r);

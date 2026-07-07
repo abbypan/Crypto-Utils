@@ -270,7 +270,7 @@ sub generate_TT {
   my ( $self, $Context, $A, $B, $X, $Y, $Z, $V, $w0 ) = @_;
 
   my @points = map { pack( "H*", point2hex( $self->{curve_name}, $_, 4 ) ) } ( $self->{M}, $self->{N}, $X, $Y, $Z, $V );
-  my $TT     = $self->concat_data( $Context, $A, $B, @points, pack( "H*", $w0->to_hex() ) );
+  my $TT     = $self->concat_data( $Context, $A, $B, @points, pack( "H*", BN_bn2hex($w0) ) );
 
   return $TT;
 }
@@ -279,7 +279,7 @@ sub generate_TT_alt {
   my ( $self, $X, $Y, $Z, $V, $w0 ) = @_;
 
   my @points = map { pack( "H*", point2hex( $self->{curve_name}, $_, 4 ) ) } ( $X, $Y, $Z, $V );
-  my $TT     = $self->concat_data( @points, pack( "H*", $w0->to_hex() ) );
+  my $TT     = $self->concat_data( @points, pack( "H*", BN_bn2hex($w0) ) );
 
   return $TT;
 }

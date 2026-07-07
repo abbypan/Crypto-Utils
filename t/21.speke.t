@@ -31,14 +31,14 @@ print "G=", $G_hex, "\n\n";
 # a send MSGa
 my $IDa  = "IDa";
 my ($MSGa, $X, $x) = prepare_send_msg($group, $G,  4, $ctx, $IDa);
-print "x=", $x->to_hex(), "\n";
+print "x=", BN_bn2hex($x), "\n";
 print "X=", Crypt::OpenSSL::EC::EC_POINT::point2hex($group, $X, 4, $ctx), "\n";
 print "MSGa: ", unpack( "H*", $MSGa ), "\n\n";
 
 # b send Msgb
 my $IDb  = "IDb";
 my ($MSGb, $Y, $y) = prepare_send_msg($group, $G,  4, $ctx, $IDb);
-print "y=", $y->to_hex(), "\n";
+print "y=", BN_bn2hex($y), "\n";
 print "Y=", Crypt::OpenSSL::EC::EC_POINT::point2hex($group, $Y, 4, $ctx), "\n";
 print "MSGb: ", unpack( "H*", $MSGb ), "\n\n";
 

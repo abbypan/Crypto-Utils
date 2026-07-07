@@ -931,7 +931,7 @@ RFC7914 : Scrypt
 
     my $Nn = 16;
     my $random_bn = random_bn($Nn);
-    print $random_bn->to_hex, "\n";
+    print BN_bn2hex($random_bn), "\n";
 
 =head2 hash
 

@@ -42,11 +42,11 @@ my ($w0_bn, $w1_bn) = $spake2plus->calc_w0_w1(\&Crypto::Utils::SPAKE2Plus::bmod_
 
 # A, B: w0, w1, L = w1*P
 
-my $w0 = $w0_bn->to_hex();
+my $w0 = BN_bn2hex($w0_bn);
 ### $w0
 is($w0, 'E433AB43428320B24FAB82F915D1DB114ACD72F8A4BF4FBF3C712B94BCC2F013', 'w0');
 
-my $w1   = $w1_bn->to_hex() ;
+my $w1   = BN_bn2hex($w1_bn) ;
 ### $w1
 is($w1, '44363D157F471221B1E75E596FF4714A712B9578301665D84EC17004952523A8', 'w1');
 

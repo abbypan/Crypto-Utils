@@ -109,7 +109,7 @@ my $unpack_func = sub {
     return [ $s_pub, $nonce, $auth_tag ];
 };
 my $recover_r = recover_credentials($cred_req_r, $cred_res_r, $pwd, $c_id, $s_id, $Nseed, $group_name, $finalize_info, $finalize_DST, $hash_name, $expand_message_func, $mac_func, $pwd_harden_func, $unpack_func);
-is($recover_r->{c_priv}->to_hex, 'D1D280F712E4EBF3C881C686E13C281BC3A3FAB30A00411A350F4F8B7A1EA550', 'recover_credentials');
+is(BN_bn2hex($recover_r->{c_priv}), 'D1D280F712E4EBF3C881C686E13C281BC3A3FAB30A00411A350F4F8B7A1EA550', 'recover_credentials');
 is($recover_r->{export_key}, pack("H*", '77869b0d11debf6fc88c1d192dde9546baf528b2f70c2aea89960fc2178586da'), 'recover_credentials');
 
 done_testing;

@@ -269,7 +269,7 @@ L<https://datatracker.ietf.org/doc/draft-irtf-cfrg-cpace/>
     my $Ya;
     my $MSGa;
     ($MSGa, $Ya, $ya) = prepare_send_msg($group, $G, $ya, 4, $ctx, $ADa);
-    print "ya=", $ya->to_hex(), "\n";
+    print "ya=", BN_bn2hex($ya), "\n";
     print "Ya=", Crypt::OpenSSL::EC::EC_POINT::point2hex($group, $Ya, 4, $ctx), "\n";
     print "MSGa: ", unpack( "H*", $MSGa ), "\n\n";
 
@@ -279,7 +279,7 @@ L<https://datatracker.ietf.org/doc/draft-irtf-cfrg-cpace/>
     my $Yb;
     my $MSGb;
     ($MSGb, $Yb, $yb) = prepare_send_msg($group, $G, $yb, 4, $ctx, $ADb);
-    print "yb=", $yb->to_hex(), "\n";
+    print "yb=", BN_bn2hex($yb), "\n";
     print "Yb=", Crypt::OpenSSL::EC::EC_POINT::point2hex($group, $Yb, 4, $ctx), "\n";
     print "MSGb: ", unpack( "H*", $MSGb ), "\n\n";
 

@@ -18,13 +18,13 @@ my $z = Crypt::OpenSSL::Bignum->new_from_decimal('-10');
 #$group->get_order( $order, $ctx );
 #$group->get_curve($p, $a, $b, $ctx);
 EC_GROUP_get_curve( $group, $p, $a, $b, $ctx );
-my $p_hex = $p->to_hex;
+my $p_hex = BN_bn2hex($p);
 print "p: $p_hex\n";
-my $a_hex = $a->to_hex;
+my $a_hex = BN_bn2hex($a);
 print "a: $a_hex\n";
-my $b_hex = $b->to_hex;
+my $b_hex = BN_bn2hex($b);
 print "b: $b_hex\n";
-my $z_hex = $z->to_hex;
+my $z_hex = BN_bn2hex($z);
 print "z: $z_hex\n";
 
 my $u_hex = 'ea083a886a38ef4d15d95bd6a4b4d65620d3c57e4ed00e09fd2d67d67afd0797';
@@ -34,9 +34,9 @@ my $y = Crypt::OpenSSL::Bignum->zero;
 
 map_to_curve_sswu_not_straight_line($p, $a, $b, $z, $u, $x, $y, $ctx);
 print "u: $u_hex\n";
-my $x_hex = $x->to_hex;
+my $x_hex = BN_bn2hex($x);
 print "x: $x_hex\n";
-my $y_hex = $y->to_hex;
+my $y_hex = BN_bn2hex($y);
 print "y: $y_hex\n";
 
 is($x_hex, "993B46E30BA9CFC3DC2D3AE2CF9733CF03994E74383C4E1B4A92E8D6D466B321", "x");

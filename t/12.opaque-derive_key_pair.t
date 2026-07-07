@@ -42,6 +42,6 @@ my $expand_message_func = \&expand_message_xmd;
 my $ec_key_r = derive_key_pair($group_name, $seed, $info, "DeriveKeyPair".$context_string, $hash_name, $expand_message_func);
 
 #my $skS_bn = $skS->get0_private_key();
-is($ec_key_r->{priv_bn}->to_hex(), 'E7DB44B7F7495298770AF98417FDEEC6C8299562325E9330A79EEBF3D2A1A765', 'derive_key_pair');
+is(BN_bn2hex($ec_key_r->{priv_bn}), 'E7DB44B7F7495298770AF98417FDEEC6C8299562325E9330A79EEBF3D2A1A765', 'derive_key_pair');
 
 done_testing;
