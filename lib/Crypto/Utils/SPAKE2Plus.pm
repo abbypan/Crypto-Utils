@@ -56,11 +56,13 @@ sub new {
 
   $opt{nid}   //= OBJ_sn2nid( $opt{curve_name} );
   $opt{group} //= Crypt::OpenSSL::EC::EC_GROUP::new_by_curve_name( $opt{nid} );
-  
-  $opt{order} //= Crypt::OpenSSL::Bignum->new();
+    
   $opt{ctx} = Crypt::OpenSSL::Bignum::CTX->new();
-  Crypt::OpenSSL::EC::EC_GROUP::get_order($opt{group}, $opt{order}, $opt{ctx});
-
+  
+  if(! defined $opt{order}) {
+  $opt{order} = BN_new();
+  EC_GROUP_get_order($opt{group}, $opt{order}, $opt{ctx});
+  } 
 
   $opt{kdf} //= sub {
     my ( $Ka, $salt, $info, $dst_len ) = @_;
@@ -178,7 +180,7 @@ sub calc_L {
   my ( $self, $w1_bn ) = @_;
 
   my $zero = Crypt::OpenSSL::Bignum->new_from_hex( '0' );
-  my $temp = Crypt::OpenSSL::EC::EC_POINT::new( $self->{group} );
+  my $temp = EC_POINT_new( $self->{group} );
   my $L    = mul_ec_point( $self->{curve_name}, $w1_bn, $temp, $zero );
   return $L;
 }

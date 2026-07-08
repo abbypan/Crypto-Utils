@@ -111,11 +111,11 @@ sub blind {
     }
 
     my $P = hash_to_curve( $input, $DSI, $group_name, $type, $hash_name, $expand_message_func, $clear_cofactor_flag );
-    return if(Crypt::OpenSSL::EC::EC_POINT::is_at_infinity( $ec_params_r->{group}, $P ));
+    return if(EC_POINT_is_at_infinity( $ec_params_r->{group}, $P ));
 
     my $zero = Crypt::OpenSSL::Bignum->zero;
-    my $blindedElement    = Crypt::OpenSSL::EC::EC_POINT::new( $ec_params_r->{group} );
-    Crypt::OpenSSL::EC::EC_POINT::mul( $ec_params_r->{group}, $blindedElement, $zero, $P, $blind, $ec_params_r->{ctx} );
+    my $blindedElement    = EC_POINT_new( $ec_params_r->{group} );
+    EC_POINT_mul( $ec_params_r->{group}, $blindedElement, $zero, $P, $blind, $ec_params_r->{ctx} );
 
     return ($blind, $blindedElement);
 }
@@ -123,8 +123,8 @@ sub blind {
 sub evaluate {
     my ($group, $blindedElement, $skS, $ctx) = @_;
     my $zero = Crypt::OpenSSL::Bignum->zero; 
-    my $evaluationElement    = Crypt::OpenSSL::EC::EC_POINT::new( $group );
-    Crypt::OpenSSL::EC::EC_POINT::mul( $group, $evaluationElement, $zero, $blindedElement, $skS, $ctx );
+    my $evaluationElement    = EC_POINT_new( $group );
+    EC_POINT_mul( $group, $evaluationElement, $zero, $blindedElement, $skS, $ctx );
     return $evaluationElement;
 }
 
@@ -135,7 +135,7 @@ sub finalize {
 
     my $unblindedElement = evaluate($group, $evaluationElement, $blind_inv, $ctx);
 
-    my $unblindedElement_hex = Crypt::OpenSSL::EC::EC_POINT::point2hex($group, $unblindedElement, 2, $ctx);
+    my $unblindedElement_hex = EC_POINT_point2hex($group, $unblindedElement, 2, $ctx);
     ### $unblindedElement_hex
     my $unblindedElement_bin = pack("H*", $unblindedElement_hex);
 
@@ -192,12 +192,12 @@ L<https://datatracker.ietf.org/doc/draft-irtf-cfrg-voprf/>
     my $params_ref = get_ec_params( $group_name );
     my ( $group, $order, $ctx ) = @{$params_ref}{qw/group order ctx/};
 
-    my $bn = Crypt::OpenSSL::EC::EC_POINT::point2hex( $group, $blindedElement, 2, $ctx );
+    my $bn = EC_POINT_point2hex( $group, $blindedElement, 2, $ctx );
     print "$bn\n";
 
     my $skS               = Crypt::OpenSSL::Bignum->new_from_hex( '88a91851d93ab3e4f2636babc60d6ce9d1aee2b86dece13fa8590d955a08d987' );
     my $evaluationElement = evaluate( $group, $blindedElement, $skS, $ctx );
-    my $bn_ev             = Crypt::OpenSSL::EC::EC_POINT::point2hex( $group, $evaluationElement, 2, $ctx );
+    my $bn_ev             = EC_POINT_point2hex( $group, $evaluationElement, 2, $ctx );
     print "$bn_ev\n";
 
     my $dgst = finalize( $group, $order, $input, $blind, $evaluationElement, $hash_name, $ctx );

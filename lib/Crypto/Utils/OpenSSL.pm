@@ -36,6 +36,14 @@ OBJ_sn2nid
 OBJ_nid2sn
 EC_POINT_new
 EC_GROUP_get0_order
+EC_POINT_is_at_infinity
+EC_POINT_is_on_curve
+EC_POINT_mul
+EC_GROUP_get_curve_name
+EC_GROUP_get_order
+BN_new
+BN_copy
+BN_sub
 );
 
 our @FFIF = qw(
@@ -172,11 +180,18 @@ $crypto->attach( 'EVP_MD_CTX_free' => ['opaque'] => 'void' );
 $crypto->attach( 'EVP_DigestInit_ex2' => [ 'opaque', 'opaque', 'opaque' ] => 'int' );
 $crypto->attach( 'EVP_DigestUpdate' => [ 'opaque', 'string', 'size_t' ] => 'int' );
 $crypto->attach( 'EVP_DigestFinal_ex' => [ 'opaque', 'opaque', 'uint*' ] => 'int' );
-$crypto->attach( 'BN_bn2hex' => ['opaque'] => 'string' );
+$crypto->attach( [ BN_bn2hex => '_BN_bn2hex' ] => ['opaque'] => 'opaque' );
+$crypto->attach( [ BN_new => '_BN_new' ] => [] => 'opaque' );
+$crypto->attach( [ BN_copy => '_BN_copy' ] => [ 'opaque', 'opaque' ] => 'opaque' );
 $crypto->attach( [ BN_bn2bin => '_BN_bn2bin' ] => [ 'opaque', 'opaque' ] => 'int' );
 $crypto->attach( [ EC_GROUP_get0_order => '_EC_GROUP_get0_order' ] => ['opaque'] => 'opaque' );
+$crypto->attach( [ EC_GROUP_get_order => '_EC_GROUP_get_order' ] => [ 'opaque', 'opaque', 'opaque' ] => 'int' );
+$crypto->attach( [ EC_GROUP_get_curve_name => '_EC_GROUP_get_curve_name' ] => ['opaque'] => 'int' );
 $crypto->attach( [ EC_GROUP_get_curve => '_EC_GROUP_get_curve' ] => [ 'opaque', 'opaque', 'opaque', 'opaque', 'opaque' ] => 'int' );
 $crypto->attach( [ EC_POINT_new => '_EC_POINT_new' ] => ['opaque'] => 'opaque' );
+$crypto->attach( [ EC_POINT_is_at_infinity => '_EC_POINT_is_at_infinity' ] => [ 'opaque', 'opaque' ] => 'int' );
+$crypto->attach( [ EC_POINT_is_on_curve => '_EC_POINT_is_on_curve' ] => [ 'opaque', 'opaque', 'opaque' ] => 'int' );
+$crypto->attach( [ EC_POINT_mul => '_EC_POINT_mul' ] => [ 'opaque', 'opaque', 'opaque', 'opaque', 'opaque', 'opaque' ] => 'int' );
 $crypto->attach( [ EC_POINT_invert => '_EC_POINT_invert' ] => [ 'opaque', 'opaque', 'opaque' ] => 'int' );
 $crypto->attach( [ EC_POINT_add => '_EC_POINT_add' ] => [ 'opaque', 'opaque', 'opaque', 'opaque', 'opaque' ] => 'int' );
 $crypto->attach( [ EC_POINT_set_affine_coordinates => '_EC_POINT_set_affine_coordinates' ] => [ 'opaque', 'opaque', 'opaque', 'opaque', 'opaque' ] => 'int' );
@@ -186,9 +201,9 @@ $crypto->attach( [ EVP_PKEY_get1_EC_KEY => '_EVP_PKEY_get1_EC_KEY' ] => ['opaque
 
 $ffi->attach( 'hexdump' => [ 'string', 'string', 'int' ] => 'void' );
 $ffi->attach( 'slurp' => [ 'string', 'opaque*' ] => 'size_t' );
-$ffi->attach( 'point2hex' => [ 'string', 'opaque', 'int' ] => 'string' );
-$ffi->attach( 'hex2point' => [ 'string', 'string' ] => 'opaque' );
-$ffi->attach( 'hex2bn' => ['string'] => 'opaque' );
+$ffi->attach( [ point2hex => '_point2hex' ] => [ 'string', 'opaque', 'int' ] => 'opaque' );
+$ffi->attach( [ hex2point => '_hex2point' ] => [ 'string', 'string' ] => 'opaque' );
+$ffi->attach( [ hex2bn => '_hex2bn' ] => ['string'] => 'opaque' );
 $ffi->attach( 'bin2hex' => [ 'string', 'size_t' ] => 'string' );
 $ffi->attach( [ get_pkey_bn_param => '_get_pkey_bn_param' ] => [ 'opaque', 'string' ] => 'opaque' );
 $ffi->attach( [ get_pkey_octet_string_param => '_get_pkey_octet_string_param' ] => [ 'opaque', 'string', 'opaque*' ] => 'size_t' );
@@ -211,8 +226,8 @@ $ffi->attach( [ hmac => '_hmac' ] => [ 'string', 'string', 'size_t', 'string', '
 $ffi->attach( [ hkdf => '_hkdf' ] => [ 'int', 'string', 'string', 'size_t', 'string', 'size_t', 'string', 'size_t', 'opaque*', 'size_t' ] => 'int' );
 $ffi->attach( [ scrypt => '_scrypt' ] => [ 'string', 'size_t', 'string', 'size_t', 'uint64', 'uint32', 'uint32', 'uint64', 'opaque*', 'size_t' ] => 'int' );
 $ffi->attach( [ ecdh => '_ecdh' ] => [ 'opaque', 'opaque', 'size_t*' ] => 'opaque' );
-$ffi->attach( 'mul_ec_point' => [ 'string', 'opaque', 'opaque', 'opaque' ] => 'opaque' );
-$ffi->attach( 'gen_ec_point' => [ 'string', 'opaque', 'opaque', 'int' ] => 'opaque' );
+$ffi->attach( [ mul_ec_point => '_mul_ec_point' ] => [ 'string', 'opaque', 'opaque', 'opaque' ] => 'opaque' );
+$ffi->attach( [ gen_ec_point => '_gen_ec_point' ] => [ 'string', 'opaque', 'opaque', 'int' ] => 'opaque' );
 $ffi->attach( [ gen_ec_key => '_gen_ec_key' ] => [ 'string', 'string' ] => 'opaque' );
 $ffi->attach( [ gen_ec_pubkey => '_gen_ec_pubkey' ] => [ 'string', 'string' ] => 'opaque' );
 $ffi->attach( [ export_ec_pubkey => '_export_ec_pubkey' ] => ['opaque'] => 'opaque' );
@@ -226,42 +241,69 @@ $ffi->attach( [ symmetric_cipher => '_symmetric_cipher' ] => [ 'string', 'string
 $ffi->attach( [ aead_encrypt => '_aead_encrypt' ] => [ 'string', 'string', 'int', 'string', 'int', 'string', 'string', 'int', 'opaque*', 'opaque*', 'int' ] => 'int' );
 $ffi->attach( [ aead_decrypt => '_aead_decrypt' ] => [ 'string', 'string', 'int', 'string', 'int', 'string', 'int', 'string', 'string', 'int', 'opaque*' ] => 'int' );
 $ffi->attach( [ print_pkey_gettable_params => '_print_pkey_gettable_params' ] => ['opaque'] => 'void' );
-$ffi->attach( 'sgn0_m_eq_1' => ['opaque'] => 'int' );
-$ffi->attach( 'clear_cofactor' => [ 'opaque', 'opaque', 'opaque', 'opaque' ] => 'int' );
-$ffi->attach( 'CMOV' => [ 'opaque', 'opaque', 'int' ] => 'opaque' );
-$ffi->attach( 'calc_c1_c2_for_sswu' => [ ( ('opaque') x 7 ) ] => 'int' );
-$ffi->attach( 'map_to_curve_sswu_straight_line' => [ ( ('opaque') x 10 ) ] => 'int' );
-$ffi->attach( 'map_to_curve_sswu_not_straight_line' => [ ( ('opaque') x 8 ) ] => 'int' );
+$ffi->attach( [ sgn0_m_eq_1 => '_sgn0_m_eq_1' ] => ['opaque'] => 'int' );
+$ffi->attach( [ clear_cofactor => '_clear_cofactor' ] => [ 'opaque', 'opaque', 'opaque', 'opaque' ] => 'int' );
+$ffi->attach( [ CMOV => '_CMOV' ] => [ 'opaque', 'opaque', 'int' ] => 'opaque' );
+$ffi->attach( [ calc_c1_c2_for_sswu => '_calc_c1_c2_for_sswu' ] => [ ( ('opaque') x 7 ) ] => 'int' );
+$ffi->attach( [ map_to_curve_sswu_straight_line => '_map_to_curve_sswu_straight_line' ] => [ ( ('opaque') x 10 ) ] => 'int' );
+$ffi->attach( [ map_to_curve_sswu_not_straight_line => '_map_to_curve_sswu_not_straight_line' ] => [ ( ('opaque') x 8 ) ] => 'int' );
 
-my $_BN_bn2hex = \&BN_bn2hex;
-my $_point2hex = \&point2hex;
-my $_hex2point = \&hex2point;
-my $_hex2bn = \&hex2bn;
-my $_mul_ec_point = \&mul_ec_point;
-my $_gen_ec_point = \&gen_ec_point;
-my $_sgn0_m_eq_1 = \&sgn0_m_eq_1;
-my $_clear_cofactor = \&clear_cofactor;
-my $_CMOV = \&CMOV;
-my $_calc_c1_c2_for_sswu = \&calc_c1_c2_for_sswu;
-my $_map_to_curve_sswu_straight_line = \&map_to_curve_sswu_straight_line;
-my $_map_to_curve_sswu_not_straight_line = \&map_to_curve_sswu_not_straight_line;
+sub BN_bn2hex {
+    my $ptr = _BN_bn2hex( _ptr( $_[0] ) );
+    return _string_from_ptr($ptr);
+}
 
-{
-    no warnings 'redefine';
+sub BN_new {
+    return _obj( _BN_new(), 'Crypt::OpenSSL::Bignum' );
+}
 
-    *BN_bn2hex = sub { $_BN_bn2hex->( _ptr( $_[0] ) ) };
+sub BN_copy {
+    return _obj( _BN_copy( _ptr( $_[0] ), _ptr( $_[1] ) ), 'Crypt::OpenSSL::Bignum' );
+}
 
-    *point2hex = sub { $_point2hex->( $_[0], _ptr( $_[1] ), $_[2] ) };
-    *hex2point = sub { _obj( $_hex2point->(@_), 'Crypt::OpenSSL::EC::EC_POINT' ) };
-    *hex2bn = sub { _obj( $_hex2bn->(@_), 'Crypt::OpenSSL::Bignum' ) };
-    *mul_ec_point = sub { _obj( $_mul_ec_point->( $_[0], _ptr( $_[1] ), _ptr( $_[2] ), _ptr( $_[3] ) ), 'Crypt::OpenSSL::EC::EC_POINT' ) };
-    *gen_ec_point = sub { _obj( $_gen_ec_point->( $_[0], _ptr( $_[1] ), _ptr( $_[2] ), $_[3] ), 'Crypt::OpenSSL::EC::EC_POINT' ) };
-    *sgn0_m_eq_1 = sub { $_sgn0_m_eq_1->( _ptr( $_[0] ) ) };
-    *clear_cofactor = sub { $_clear_cofactor->( map { _ptr($_) } @_ ) };
-    *CMOV = sub { _obj( $_CMOV->( _ptr( $_[0] ), _ptr( $_[1] ), $_[2] ), 'Crypt::OpenSSL::Bignum' ) };
-    *calc_c1_c2_for_sswu = sub { $_calc_c1_c2_for_sswu->( map { _ptr($_) } @_ ) };
-    *map_to_curve_sswu_straight_line = sub { $_map_to_curve_sswu_straight_line->( map { _ptr($_) } @_ ) };
-    *map_to_curve_sswu_not_straight_line = sub { $_map_to_curve_sswu_not_straight_line->( map { _ptr($_) } @_ ) };
+sub point2hex {
+    my $ptr = _point2hex( $_[0], _ptr( $_[1] ), $_[2] );
+    return _string_from_ptr($ptr);
+}
+
+sub hex2point {
+    return _obj( _hex2point(@_), 'Crypt::OpenSSL::EC::EC_POINT' );
+}
+
+sub hex2bn {
+    return _obj( _hex2bn(@_), 'Crypt::OpenSSL::Bignum' );
+}
+
+sub mul_ec_point {
+    return _obj( _mul_ec_point( $_[0], _ptr( $_[1] ), _ptr( $_[2] ), _ptr( $_[3] ) ), 'Crypt::OpenSSL::EC::EC_POINT' );
+}
+
+sub gen_ec_point {
+    return _obj( _gen_ec_point( $_[0], _ptr( $_[1] ), _ptr( $_[2] ), $_[3] ), 'Crypt::OpenSSL::EC::EC_POINT' );
+}
+
+sub sgn0_m_eq_1 {
+    return _sgn0_m_eq_1( _ptr( $_[0] ) );
+}
+
+sub clear_cofactor {
+    return _clear_cofactor( map { _ptr($_) } @_ );
+}
+
+sub CMOV {
+    return _obj( _CMOV( _ptr( $_[0] ), _ptr( $_[1] ), $_[2] ), 'Crypt::OpenSSL::Bignum' );
+}
+
+sub calc_c1_c2_for_sswu {
+    return _calc_c1_c2_for_sswu( map { _ptr($_) } @_ );
+}
+
+sub map_to_curve_sswu_straight_line {
+    return _map_to_curve_sswu_straight_line( map { _ptr($_) } @_ );
+}
+
+sub map_to_curve_sswu_not_straight_line {
+    return _map_to_curve_sswu_not_straight_line( map { _ptr($_) } @_ );
 }
 
 sub bn_mod_sqrt { _obj( _bn_mod_sqrt( _ptr( $_[0] ), _ptr( $_[1] ) ), 'Crypt::OpenSSL::Bignum' ) }
@@ -343,7 +385,16 @@ sub print_pkey_gettable_params {
 }
 
 sub EC_GROUP_get0_order {
-    return _EC_GROUP_get0_order( _ptr( $_[0] ) );
+    return
+     _obj( _EC_GROUP_get0_order( _ptr( $_[0] ) ), 'Crypt::OpenSSL::Bignum' );
+}
+
+sub EC_GROUP_get_order {
+    return _EC_GROUP_get_order( map { _ptr($_) } @_ );
+}
+
+sub EC_GROUP_get_curve_name {
+    return _EC_GROUP_get_curve_name( _ptr( $_[0] ) );
 }
 
 sub EC_GROUP_get_curve {
@@ -352,6 +403,18 @@ sub EC_GROUP_get_curve {
 
 sub EC_POINT_new {
     return _obj( _EC_POINT_new( _ptr( $_[0] ) ), 'Crypt::OpenSSL::EC::EC_POINT' );
+}
+
+sub EC_POINT_is_at_infinity {
+    return _EC_POINT_is_at_infinity( map { _ptr($_) } @_ );
+}
+
+sub EC_POINT_is_on_curve {
+    return _EC_POINT_is_on_curve( map { _ptr($_) } @_ );
+}
+
+sub EC_POINT_mul {
+    return _EC_POINT_mul( map { _ptr($_) } @_ );
 }
 
 sub EC_POINT_invert {
@@ -600,7 +663,7 @@ sub sn_point2hex {
     $point_compress_t //= 4;
 
     my $ec_params_r = get_ec_params($group_name);
-    my $point_hex = Crypt::OpenSSL::EC::EC_POINT::point2hex($ec_params_r->{group}, $point, $point_compress_t, $ec_params_r->{ctx});
+    my $point_hex = EC_POINT_point2hex($ec_params_r->{group}, $point, $point_compress_t, $ec_params_r->{ctx});
     return $point_hex;
 }
 
@@ -692,8 +755,8 @@ sub get_ec_params {
 
     my $degree = Crypt::OpenSSL::EC::EC_GROUP::get_degree($group);
 
-    my $order = Crypt::OpenSSL::Bignum->new();
-    Crypt::OpenSSL::EC::EC_GROUP::get_order($group, $order, $ctx);
+    my $order = BN_new();
+    EC_GROUP_get_order($group, $order, $ctx);
 
     my $cofactor = Crypt::OpenSSL::Bignum->new();
     Crypt::OpenSSL::EC::EC_GROUP::get_cofactor($group, $cofactor, $ctx);
@@ -767,12 +830,12 @@ sub hash_to_curve {
   my $u1 = $res[1][0];
   my $Q1 = map_to_curve( $h2c_r, $group_name, $type, $u1, $clear_cofactor_flag );
 
-  my $Q = Crypt::OpenSSL::EC::EC_POINT::new( $h2c_r->{group} );
-  Crypt::OpenSSL::EC::EC_POINT::add( $h2c_r->{group}, $Q, $Q0, $Q1, $h2c_r->{ctx} );
+  my $Q = EC_POINT_new( $h2c_r->{group} );
+  EC_POINT_add( $h2c_r->{group}, $Q, $Q0, $Q1, $h2c_r->{ctx} );
 
   return $Q unless ( $clear_cofactor_flag );
 
-  my $P = Crypt::OpenSSL::EC::EC_POINT::new( $h2c_r->{group} );
+  my $P = EC_POINT_new( $h2c_r->{group} );
   clear_cofactor( $h2c_r->{group}, $P, $Q, $h2c_r->{ctx} );
 
   return wantarray ? ($P, $h2c_r) : $P;
@@ -1106,7 +1169,7 @@ https://datatracker.ietf.org/doc/draft-irtf-cfrg-hash-to-curve/
     my $params_ref = get_hash2curve_params($group_name, $type);
     my $group = $params_ref->[0];
     my $ctx = $params_ref->[-1];
-    my $bn = Crypt::OpenSSL::EC::EC_POINT::point2hex($group, $P, 4, $ctx);
+    my $bn = EC_POINT_point2hex($group, $P, 4, $ctx);
     print $bn, "\n";
 
 =head3 encode_to_curve

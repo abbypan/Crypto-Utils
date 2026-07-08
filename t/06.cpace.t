@@ -27,7 +27,7 @@ my $hash_name = 'SHA256';
 # a, b calculate_generator G
 my ($G, $params_ref) = calculate_generator($DSI, $PRS, $CI, $sid, $group_name, $type, $hash_name, \&expand_message_xmd, 1);
 my ($group, $ctx) = @{$params_ref}{qw/group ctx/};
-my $G_hex = Crypt::OpenSSL::EC::EC_POINT::point2hex($group, $G, 4, $ctx);
+my $G_hex = EC_POINT_point2hex($group, $G, 4, $ctx);
 print "G=", $G_hex, "\n\n";
 
 # a send MSGa
@@ -37,7 +37,7 @@ my $Ya;
 my $MSGa;
 ($MSGa, $Ya, $ya) = prepare_send_msg($group, $G, $ya, 4, $ctx, $ADa);
 print "ya=", BN_bn2hex($ya), "\n";
-print "Ya=", Crypt::OpenSSL::EC::EC_POINT::point2hex($group, $Ya, 4, $ctx), "\n";
+print "Ya=", EC_POINT_point2hex($group, $Ya, 4, $ctx), "\n";
 print "MSGa: ", unpack( "H*", $MSGa ), "\n\n";
 
 # b send Msgb
@@ -47,7 +47,7 @@ my $Yb;
 my $MSGb;
 ($MSGb, $Yb, $yb) = prepare_send_msg($group, $G, $yb, 4, $ctx, $ADb);
 print "yb=", BN_bn2hex($yb), "\n";
-print "Yb=", Crypt::OpenSSL::EC::EC_POINT::point2hex($group, $Yb, 4, $ctx), "\n";
+print "Yb=", EC_POINT_point2hex($group, $Yb, 4, $ctx), "\n";
 print "MSGb: ", unpack( "H*", $MSGb ), "\n\n";
 
 # a recv Msgb, calc ISK

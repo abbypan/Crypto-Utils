@@ -106,8 +106,9 @@ sub calculate_generator {
 sub sample_scalar {
   my ( $group, $ctx ) = @_;
 
-  my $order = Crypt::OpenSSL::Bignum->new();
-  Crypt::OpenSSL::EC::EC_GROUP::get_order( $group, $order, $ctx );
+  #my $order =  EC_GROUP_get0_order( $group );
+  my $order = BN_new();
+  EC_GROUP_get_order($group, $order, $ctx);
   my $two = Crypt::OpenSSL::Bignum->new_from_word( 2 );
   $order->sub( $two );
 
@@ -124,8 +125,8 @@ sub scalar_mult {
   $rnd = sample_scalar( $group, $ctx ) unless ( $rnd );
 
   my $zero = Crypt::OpenSSL::Bignum->zero;
-  my $R    = Crypt::OpenSSL::EC::EC_POINT::new( $group );
-  Crypt::OpenSSL::EC::EC_POINT::mul( $group, $R, $zero, $G, $rnd, $ctx );
+  my $R    = EC_POINT_new( $group );
+  EC_POINT_mul( $group, $R, $zero, $G, $rnd, $ctx );
 
   return wantarray ? ( $R, $rnd ) : $R;
 }
@@ -133,15 +134,15 @@ sub scalar_mult {
 sub scalar_mult_vfy {
   my ( $group, $P, $rnd, $ctx ) = @_;
 
-  return if Crypt::OpenSSL::EC::EC_POINT::is_at_infinity( $group, $P );
-  return unless Crypt::OpenSSL::EC::EC_POINT::is_on_curve( $group, $P, $ctx );
+  return if EC_POINT_is_at_infinity( $group, $P );
+  return unless EC_POINT_is_on_curve( $group, $P, $ctx );
 
   my $zero = Crypt::OpenSSL::Bignum->zero;
-  my $R    = Crypt::OpenSSL::EC::EC_POINT::new( $group );
-  Crypt::OpenSSL::EC::EC_POINT::mul( $group, $R, $zero, $P, $rnd, $ctx );
+  my $R    = EC_POINT_new( $group );
+  EC_POINT_mul( $group, $R, $zero, $P, $rnd, $ctx );
 
-  return if Crypt::OpenSSL::EC::EC_POINT::is_at_infinity( $group, $R );
-  return unless Crypt::OpenSSL::EC::EC_POINT::is_on_curve( $group, $R, $ctx );
+  return if EC_POINT_is_at_infinity( $group, $R );
+  return unless EC_POINT_is_on_curve( $group, $R, $ctx );
 
   my $x = Crypt::OpenSSL::Bignum->zero;
   my $y = Crypt::OpenSSL::Bignum->zero;
@@ -152,10 +153,10 @@ sub scalar_mult_vfy {
 sub prepare_send_msg {
   my ( $group, $G, $rnd, $point_hex_type, $ctx, $AD ) = @_;
 
-  my $point = Crypt::OpenSSL::EC::EC_POINT::new( $group );
+  my $point = EC_POINT_new( $group );
   ( $point, $rnd ) = scalar_mult( $group, $G, $rnd, $ctx );
 
-  my $point_hex = Crypt::OpenSSL::EC::EC_POINT::point2hex( $group, $point, $point_hex_type, $ctx );
+  my $point_hex = EC_POINT_point2hex( $group, $point, $point_hex_type, $ctx );
   my $msg       = prefix_free_cat( pack( "H*", $point_hex ), $AD );
 
   return ( $msg, $point, $rnd );
@@ -200,9 +201,8 @@ sub prepare_ISK {
 
   my $point_hex  = unpack( "H*", $msg_recv_data[0] );
 
-  #my $point_recv = Crypt::OpenSSL::EC::EC_POINT::new( $group );
-  #$point_recv = Crypt::OpenSSL::EC::EC_POINT::hex2point( $group, $point_hex, $point_recv, $ctx );
-  my $nid = Crypt::OpenSSL::EC::EC_GROUP::get_curve_name($group);
+    
+  my $nid = EC_GROUP_get_curve_name($group);
   my $group_name = OBJ_nid2sn($nid);
   #print "nid,", $nid, "group, ", $group_name, ",\n";
   my $point_recv = hex2point($group_name, $point_hex);
@@ -260,7 +260,7 @@ L<https://datatracker.ietf.org/doc/draft-irtf-cfrg-cpace/>
     # a, b calculate_generator G
     my ($G, $params_ref) = calculate_generator($DSI, $PRS, $CI, $sid, $group_name, $type, $hash_name, \&expand_message_xmd, 1);
     my ($group, $c1, $c2, $p, $a, $b, $z, $ctx) = @$params_ref;
-    my $G_hex = Crypt::OpenSSL::EC::EC_POINT::point2hex($group, $G, 4, $ctx);
+    my $G_hex = EC_POINT_point2hex($group, $G, 4, $ctx);
     print "G=", $G_hex, "\n\n";
 
     # a send MSGa
@@ -270,7 +270,7 @@ L<https://datatracker.ietf.org/doc/draft-irtf-cfrg-cpace/>
     my $MSGa;
     ($MSGa, $Ya, $ya) = prepare_send_msg($group, $G, $ya, 4, $ctx, $ADa);
     print "ya=", BN_bn2hex($ya), "\n";
-    print "Ya=", Crypt::OpenSSL::EC::EC_POINT::point2hex($group, $Ya, 4, $ctx), "\n";
+    print "Ya=", EC_POINT_point2hex($group, $Ya, 4, $ctx), "\n";
     print "MSGa: ", unpack( "H*", $MSGa ), "\n\n";
 
     # b send Msgb
@@ -280,7 +280,7 @@ L<https://datatracker.ietf.org/doc/draft-irtf-cfrg-cpace/>
     my $MSGb;
     ($MSGb, $Yb, $yb) = prepare_send_msg($group, $G, $yb, 4, $ctx, $ADb);
     print "yb=", BN_bn2hex($yb), "\n";
-    print "Yb=", Crypt::OpenSSL::EC::EC_POINT::point2hex($group, $Yb, 4, $ctx), "\n";
+    print "Yb=", EC_POINT_point2hex($group, $Yb, 4, $ctx), "\n";
     print "MSGb: ", unpack( "H*", $MSGb ), "\n\n";
 
     # a recv Msgb, calc ISK

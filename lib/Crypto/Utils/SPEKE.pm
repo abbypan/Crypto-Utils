@@ -31,11 +31,11 @@ sub prepare_send_msg {
 
     my $rnd = sample_scalar($group, $ctx);
 
-    my $point = Crypt::OpenSSL::EC::EC_POINT::new($group);
+    my $point = EC_POINT_new($group);
     ( $point, $rnd ) = scalar_mult( $group, $G, $rnd, $ctx );
 
     my $point_hex =
-      Crypt::OpenSSL::EC::EC_POINT::point2hex( $group, $point, $point_hex_type,
+      EC_POINT_point2hex( $group, $point, $point_hex_type,
         $ctx );
     my $msg = encode_cbor [ $ID, pack( "H*", $point_hex ) ];
 
@@ -49,9 +49,7 @@ sub calc_K {
     my $identity      = $msg_recv_data->[0];
     my $point_hex     = unpack( "H*", $msg_recv_data->[1] );
 
-#my $point_recv = Crypt::OpenSSL::EC::EC_POINT::new( $group );
-#$point_recv = Crypt::OpenSSL::EC::EC_POINT::hex2point( $group, $point_hex, $point_recv, $ctx );
-    my $nid        = Crypt::OpenSSL::EC::EC_GROUP::get_curve_name($group);
+    my $nid        = EC_GROUP_get_curve_name($group);
     my $group_name = OBJ_nid2sn($nid);
 
     #print "nid,", $nid, "group, ", $group_name, ",\n";
@@ -109,21 +107,21 @@ L<https://arxiv.org/pdf/1802.04900>
 	# a, b calculate_generator G
 	my ($G, $params_ref) = encode_to_curve( $PRS, $DSI, $group_name, $type, $hash_name, \&expand_message_xmd, 1);
 	my ($group, $ctx) = @{$params_ref}{qw/group ctx/};
-	my $G_hex = Crypt::OpenSSL::EC::EC_POINT::point2hex($group, $G, 4, $ctx);
+	my $G_hex = EC_POINT_point2hex($group, $G, 4, $ctx);
 	print "G=", $G_hex, "\n\n";
 
 	# a send MSGa
 	my $IDa  = "IDa";
 	my ($MSGa, $X, $x) = prepare_send_msg($group, $G, 4, $ctx, $IDa);
 	print "x=", BN_bn2hex($x), "\n";
-	print "X=", Crypt::OpenSSL::EC::EC_POINT::point2hex($group, $X, 4, $ctx), "\n";
+	print "X=", EC_POINT_point2hex($group, $X, 4, $ctx), "\n";
 	print "MSGa: ", unpack( "H*", $MSGa ), "\n\n";
 
 	# b send Msgb
 	my $IDb  = "IDb";
 	my ($MSGb, $Y, $y) = prepare_send_msg($group, $G,  4, $ctx, $IDb);
 	print "y=", BN_bn2hex($y), "\n";
-	print "Y=", Crypt::OpenSSL::EC::EC_POINT::point2hex($group, $Y, 4, $ctx), "\n";
+	print "Y=", EC_POINT_point2hex($group, $Y, 4, $ctx), "\n";
 	print "MSGb: ", unpack( "H*", $MSGb ), "\n\n";
 
 	# a recv Msgb, calc K
