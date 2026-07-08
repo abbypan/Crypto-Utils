@@ -148,6 +148,14 @@ sub _bytes_from_ptr {
     return $out;
 }
 
+sub _string_from_ptr {
+    my ($ptr) = @_;
+    return undef unless $ptr;
+    my $out = $ffi->cast('opaque' => 'string', $ptr);
+    OPENSSL_free($ptr);
+    return $out;
+}
+
 $crypto->attach( [ CRYPTO_free => '_CRYPTO_free' ] => [ 'opaque', 'string', 'int' ] => 'void' );
 sub OPENSSL_free {
     my ($ptr) = @_;
@@ -165,15 +173,16 @@ $crypto->attach( 'EVP_DigestInit_ex2' => [ 'opaque', 'opaque', 'opaque' ] => 'in
 $crypto->attach( 'EVP_DigestUpdate' => [ 'opaque', 'string', 'size_t' ] => 'int' );
 $crypto->attach( 'EVP_DigestFinal_ex' => [ 'opaque', 'opaque', 'uint*' ] => 'int' );
 $crypto->attach( 'BN_bn2hex' => ['opaque'] => 'string' );
-$crypto->attach( 'EC_GROUP_get0_order' => ['opaque'] => 'opaque' );
-$crypto->attach( 'EC_GROUP_get_curve' => [ 'opaque', 'opaque', 'opaque', 'opaque', 'opaque' ] => 'int' );
-$crypto->attach( 'EC_POINT_new' => ['opaque'] => 'opaque' );
-$crypto->attach( 'EC_POINT_invert' => [ 'opaque', 'opaque', 'opaque' ] => 'int' );
-$crypto->attach( 'EC_POINT_add' => [ 'opaque', 'opaque', 'opaque', 'opaque', 'opaque' ] => 'int' );
-$crypto->attach( 'EC_POINT_set_affine_coordinates' => [ 'opaque', 'opaque', 'opaque', 'opaque', 'opaque' ] => 'int' );
-$crypto->attach( 'EC_POINT_get_affine_coordinates' => [ 'opaque', 'opaque', 'opaque', 'opaque', 'opaque' ] => 'int' );
-$crypto->attach( 'EC_POINT_point2hex' => [ 'opaque', 'opaque', 'int', 'opaque' ] => 'string' );
-$crypto->attach( 'EVP_PKEY_get1_EC_KEY' => ['opaque'] => 'opaque' );
+$crypto->attach( [ BN_bn2bin => '_BN_bn2bin' ] => [ 'opaque', 'opaque' ] => 'int' );
+$crypto->attach( [ EC_GROUP_get0_order => '_EC_GROUP_get0_order' ] => ['opaque'] => 'opaque' );
+$crypto->attach( [ EC_GROUP_get_curve => '_EC_GROUP_get_curve' ] => [ 'opaque', 'opaque', 'opaque', 'opaque', 'opaque' ] => 'int' );
+$crypto->attach( [ EC_POINT_new => '_EC_POINT_new' ] => ['opaque'] => 'opaque' );
+$crypto->attach( [ EC_POINT_invert => '_EC_POINT_invert' ] => [ 'opaque', 'opaque', 'opaque' ] => 'int' );
+$crypto->attach( [ EC_POINT_add => '_EC_POINT_add' ] => [ 'opaque', 'opaque', 'opaque', 'opaque', 'opaque' ] => 'int' );
+$crypto->attach( [ EC_POINT_set_affine_coordinates => '_EC_POINT_set_affine_coordinates' ] => [ 'opaque', 'opaque', 'opaque', 'opaque', 'opaque' ] => 'int' );
+$crypto->attach( [ EC_POINT_get_affine_coordinates => '_EC_POINT_get_affine_coordinates' ] => [ 'opaque', 'opaque', 'opaque', 'opaque', 'opaque' ] => 'int' );
+$crypto->attach( [ EC_POINT_point2hex => '_EC_POINT_point2hex' ] => [ 'opaque', 'opaque', 'int', 'opaque' ] => 'opaque' );
+$crypto->attach( [ EVP_PKEY_get1_EC_KEY => '_EVP_PKEY_get1_EC_KEY' ] => ['opaque'] => 'opaque' );
 
 $ffi->attach( 'hexdump' => [ 'string', 'string', 'int' ] => 'void' );
 $ffi->attach( 'slurp' => [ 'string', 'opaque*' ] => 'size_t' );
@@ -181,19 +190,19 @@ $ffi->attach( 'point2hex' => [ 'string', 'opaque', 'int' ] => 'string' );
 $ffi->attach( 'hex2point' => [ 'string', 'string' ] => 'opaque' );
 $ffi->attach( 'hex2bn' => ['string'] => 'opaque' );
 $ffi->attach( 'bin2hex' => [ 'string', 'size_t' ] => 'string' );
-$ffi->attach( 'get_pkey_bn_param' => [ 'opaque', 'string' ] => 'opaque' );
+$ffi->attach( [ get_pkey_bn_param => '_get_pkey_bn_param' ] => [ 'opaque', 'string' ] => 'opaque' );
 $ffi->attach( '_get_pkey_octet_string_param' => [ 'opaque', 'string', 'opaque*' ] => 'size_t' );
-$ffi->attach( 'get_pkey_utf8_string_param' => [ 'opaque', 'string' ] => 'string' );
-$ffi->attach( 'export_rsa_pubkey' => ['opaque'] => 'opaque' );
+$ffi->attach( [ get_pkey_utf8_string_param => '_get_pkey_utf8_string_param' ] => [ 'opaque', 'string' ] => 'opaque' );
+$ffi->attach( [ export_rsa_pubkey => '_export_rsa_pubkey' ] => ['opaque'] => 'opaque' );
 $ffi->attach( '_rsa_oaep_encrypt' => [ 'string', 'opaque', 'string', 'size_t', 'opaque*' ] => 'size_t' );
 $ffi->attach( '_rsa_oaep_decrypt' => [ 'string', 'opaque', 'string', 'size_t', 'opaque*' ] => 'size_t' );
-$ffi->attach( 'read_key' => ['opaque'] => 'string' );
-$ffi->attach( 'read_key_from_der' => ['string'] => 'opaque' );
-$ffi->attach( 'read_pubkey_from_der' => ['string'] => 'opaque' );
-$ffi->attach( 'read_key_from_pem' => ['string'] => 'opaque' );
-$ffi->attach( 'read_pubkey_from_pem' => ['string'] => 'opaque' );
-$ffi->attach( 'read_pubkey' => ['opaque'] => 'string' );
-$ffi->attach( 'read_ec_pubkey' => [ 'opaque', 'int' ] => 'string' );
+$ffi->attach( [ read_key => '_read_key' ] => ['opaque'] => 'opaque' );
+$ffi->attach( [ read_key_from_der => '_read_key_from_der' ] => ['string'] => 'opaque' );
+$ffi->attach( [ read_pubkey_from_der => '_read_pubkey_from_der' ] => ['string'] => 'opaque' );
+$ffi->attach( [ read_key_from_pem => '_read_key_from_pem' ] => ['string'] => 'opaque' );
+$ffi->attach( [ read_pubkey_from_pem => '_read_pubkey_from_pem' ] => ['string'] => 'opaque' );
+$ffi->attach( [ read_pubkey => '_read_pubkey' ] => ['opaque'] => 'opaque' );
+$ffi->attach( [ read_ec_pubkey => '_read_ec_pubkey' ] => [ 'opaque', 'int' ] => 'opaque' );
 $ffi->attach( '_bn_mod_sqrt' => [ 'opaque', 'opaque' ] => 'opaque' );
 $ffi->attach( '_aes_cmac' => [ 'string', 'string', 'size_t', 'string', 'size_t', 'size_t*' ] => 'opaque' );
 $ffi->attach( '_pkcs12_key_gen' => [ 'string', 'size_t', 'string', 'size_t', 'uint', 'uint', 'string', 'size_t*' ] => 'opaque' );
@@ -204,19 +213,19 @@ $ffi->attach( '_scrypt' => [ 'string', 'size_t', 'string', 'size_t', 'uint64', '
 $ffi->attach( '_ecdh' => [ 'opaque', 'opaque', 'size_t*' ] => 'opaque' );
 $ffi->attach( 'mul_ec_point' => [ 'string', 'opaque', 'opaque', 'opaque' ] => 'opaque' );
 $ffi->attach( 'gen_ec_point' => [ 'string', 'opaque', 'opaque', 'int' ] => 'opaque' );
-$ffi->attach( 'gen_ec_key' => [ 'string', 'string' ] => 'opaque' );
-$ffi->attach( 'gen_ec_pubkey' => [ 'string', 'string' ] => 'opaque' );
-$ffi->attach( 'export_ec_pubkey' => ['opaque'] => 'opaque' );
-$ffi->attach( 'write_key_to_der' => [ 'string', 'opaque' ] => 'string' );
-$ffi->attach( 'write_key_to_pem' => [ 'string', 'opaque' ] => 'string' );
-$ffi->attach( 'write_pubkey_to_der' => [ 'string', 'opaque' ] => 'string' );
-$ffi->attach( 'write_pubkey_to_pem' => [ 'string', 'opaque' ] => 'string' );
+$ffi->attach( [ gen_ec_key => '_gen_ec_key' ] => [ 'string', 'string' ] => 'opaque' );
+$ffi->attach( [ gen_ec_pubkey => '_gen_ec_pubkey' ] => [ 'string', 'string' ] => 'opaque' );
+$ffi->attach( [ export_ec_pubkey => '_export_ec_pubkey' ] => ['opaque'] => 'opaque' );
+$ffi->attach( [ write_key_to_der => '_write_key_to_der' ] => [ 'string', 'opaque' ] => 'string' );
+$ffi->attach( [ write_key_to_pem => '_write_key_to_pem' ] => [ 'string', 'opaque' ] => 'string' );
+$ffi->attach( [ write_pubkey_to_der => '_write_pubkey_to_der' ] => [ 'string', 'opaque' ] => 'string' );
+$ffi->attach( [ write_pubkey_to_pem => '_write_pubkey_to_pem' ] => [ 'string', 'opaque' ] => 'string' );
 $ffi->attach( '_ecdsa_sign' => [ 'opaque', 'string', 'string', 'int', 'opaque*' ] => 'int' );
 $ffi->attach( '_ecdsa_verify' => [ 'opaque', 'string', 'string', 'int', 'string', 'int' ] => 'int' );
 $ffi->attach( '_symmetric_cipher' => [ 'string', 'string', 'int', 'string', 'string', 'int', 'opaque*', 'int' ] => 'int' );
 $ffi->attach( '_aead_encrypt' => [ 'string', 'string', 'int', 'string', 'int', 'string', 'string', 'int', 'opaque*', 'opaque*', 'int' ] => 'int' );
 $ffi->attach( '_aead_decrypt' => [ 'string', 'string', 'int', 'string', 'int', 'string', 'int', 'string', 'string', 'int', 'opaque*' ] => 'int' );
-$ffi->attach( 'print_pkey_gettable_params' => ['opaque'] => 'void' );
+$ffi->attach( [ print_pkey_gettable_params => '_print_pkey_gettable_params' ] => ['opaque'] => 'void' );
 $ffi->attach( 'sgn0_m_eq_1' => ['opaque'] => 'int' );
 $ffi->attach( 'clear_cofactor' => [ 'opaque', 'opaque', 'opaque', 'opaque' ] => 'int' );
 $ffi->attach( 'CMOV' => [ 'opaque', 'opaque', 'int' ] => 'opaque' );
@@ -225,39 +234,11 @@ $ffi->attach( 'map_to_curve_sswu_straight_line' => [ ( ('opaque') x 10 ) ] => 'i
 $ffi->attach( 'map_to_curve_sswu_not_straight_line' => [ ( ('opaque') x 8 ) ] => 'int' );
 
 my $_BN_bn2hex = \&BN_bn2hex;
-my $_EC_GROUP_get0_order = \&EC_GROUP_get0_order;
-my $_EC_GROUP_get_curve = \&EC_GROUP_get_curve;
-my $_EC_POINT_new = \&EC_POINT_new;
-my $_EC_POINT_invert = \&EC_POINT_invert;
-my $_EC_POINT_add = \&EC_POINT_add;
-my $_EC_POINT_set_affine_coordinates = \&EC_POINT_set_affine_coordinates;
-my $_EC_POINT_get_affine_coordinates = \&EC_POINT_get_affine_coordinates;
-my $_EC_POINT_point2hex = \&EC_POINT_point2hex;
-my $_EVP_PKEY_get1_EC_KEY = \&EVP_PKEY_get1_EC_KEY;
-
 my $_point2hex = \&point2hex;
 my $_hex2point = \&hex2point;
 my $_hex2bn = \&hex2bn;
-my $_get_pkey_bn_param = \&get_pkey_bn_param;
-my $_get_pkey_utf8_string_param = \&get_pkey_utf8_string_param;
-my $_export_rsa_pubkey = \&export_rsa_pubkey;
-my $_read_key = \&read_key;
-my $_read_key_from_der = \&read_key_from_der;
-my $_read_pubkey_from_der = \&read_pubkey_from_der;
-my $_read_key_from_pem = \&read_key_from_pem;
-my $_read_pubkey_from_pem = \&read_pubkey_from_pem;
-my $_read_pubkey = \&read_pubkey;
-my $_read_ec_pubkey = \&read_ec_pubkey;
 my $_mul_ec_point = \&mul_ec_point;
 my $_gen_ec_point = \&gen_ec_point;
-my $_gen_ec_key = \&gen_ec_key;
-my $_gen_ec_pubkey = \&gen_ec_pubkey;
-my $_export_ec_pubkey = \&export_ec_pubkey;
-my $_write_key_to_der = \&write_key_to_der;
-my $_write_key_to_pem = \&write_key_to_pem;
-my $_write_pubkey_to_der = \&write_pubkey_to_der;
-my $_write_pubkey_to_pem = \&write_pubkey_to_pem;
-my $_print_pkey_gettable_params = \&print_pkey_gettable_params;
 my $_sgn0_m_eq_1 = \&sgn0_m_eq_1;
 my $_clear_cofactor = \&clear_cofactor;
 my $_CMOV = \&CMOV;
@@ -269,39 +250,12 @@ my $_map_to_curve_sswu_not_straight_line = \&map_to_curve_sswu_not_straight_line
     no warnings 'redefine';
 
     *BN_bn2hex = sub { $_BN_bn2hex->( _ptr( $_[0] ) ) };
-    *EC_GROUP_get0_order = sub { $_EC_GROUP_get0_order->( _ptr( $_[0] ) ) };
-    *EC_GROUP_get_curve = sub { $_EC_GROUP_get_curve->( map { _ptr($_) } @_ ) };
-    *EC_POINT_new = sub { _obj( $_EC_POINT_new->( _ptr( $_[0] ) ), 'Crypt::OpenSSL::EC::EC_POINT' ) };
-    *EC_POINT_invert = sub { $_EC_POINT_invert->( map { _ptr($_) } @_ ) };
-    *EC_POINT_add = sub { $_EC_POINT_add->( map { _ptr($_) } @_ ) };
-    *EC_POINT_set_affine_coordinates = sub { $_EC_POINT_set_affine_coordinates->( map { _ptr($_) } @_ ) };
-    *EC_POINT_get_affine_coordinates = sub { $_EC_POINT_get_affine_coordinates->( map { _ptr($_) } @_ ) };
-    *EC_POINT_point2hex = sub { $_EC_POINT_point2hex->( _ptr( $_[0] ), _ptr( $_[1] ), $_[2], _ptr( $_[3] ) ) };
-    *EVP_PKEY_get1_EC_KEY = sub { _obj( $_EVP_PKEY_get1_EC_KEY->( _ptr( $_[0] ) ), 'Crypt::OpenSSL::EC::EC_KEY' ) };
 
     *point2hex = sub { $_point2hex->( $_[0], _ptr( $_[1] ), $_[2] ) };
     *hex2point = sub { _obj( $_hex2point->(@_), 'Crypt::OpenSSL::EC::EC_POINT' ) };
     *hex2bn = sub { _obj( $_hex2bn->(@_), 'Crypt::OpenSSL::Bignum' ) };
-    *get_pkey_bn_param = sub { _obj( $_get_pkey_bn_param->( _ptr( $_[0] ), $_[1] ), 'Crypt::OpenSSL::Bignum' ) };
-    *get_pkey_utf8_string_param = sub { $_get_pkey_utf8_string_param->( _ptr( $_[0] ), $_[1] ) };
-    *export_rsa_pubkey = sub { _obj( $_export_rsa_pubkey->( _ptr( $_[0] ) ), 'Crypt::OpenSSL::EC::EVP_PKEY' ) };
-    *read_key = sub { $_read_key->( _ptr( $_[0] ) ) };
-    *read_key_from_der = sub { _obj( $_read_key_from_der->(@_), 'Crypt::OpenSSL::EC::EVP_PKEY' ) };
-    *read_pubkey_from_der = sub { _obj( $_read_pubkey_from_der->(@_), 'Crypt::OpenSSL::EC::EVP_PKEY' ) };
-    *read_key_from_pem = sub { _obj( $_read_key_from_pem->(@_), 'Crypt::OpenSSL::EC::EVP_PKEY' ) };
-    *read_pubkey_from_pem = sub { _obj( $_read_pubkey_from_pem->(@_), 'Crypt::OpenSSL::EC::EVP_PKEY' ) };
-    *read_pubkey = sub { $_read_pubkey->( _ptr( $_[0] ) ) };
-    *read_ec_pubkey = sub { $_read_ec_pubkey->( _ptr( $_[0] ), $_[1] ) };
     *mul_ec_point = sub { _obj( $_mul_ec_point->( $_[0], _ptr( $_[1] ), _ptr( $_[2] ), _ptr( $_[3] ) ), 'Crypt::OpenSSL::EC::EC_POINT' ) };
     *gen_ec_point = sub { _obj( $_gen_ec_point->( $_[0], _ptr( $_[1] ), _ptr( $_[2] ), $_[3] ), 'Crypt::OpenSSL::EC::EC_POINT' ) };
-    *gen_ec_key = sub { _obj( $_gen_ec_key->( $_[0], $_[1] // '' ), 'Crypt::OpenSSL::EC::EVP_PKEY' ) };
-    *gen_ec_pubkey = sub { _obj( $_gen_ec_pubkey->(@_), 'Crypt::OpenSSL::EC::EVP_PKEY' ) };
-    *export_ec_pubkey = sub { _obj( $_export_ec_pubkey->( _ptr( $_[0] ) ), 'Crypt::OpenSSL::EC::EVP_PKEY' ) };
-    *write_key_to_der = sub { $_write_key_to_der->( $_[0], _ptr( $_[1] ) ) };
-    *write_key_to_pem = sub { $_write_key_to_pem->( $_[0], _ptr( $_[1] ) ) };
-    *write_pubkey_to_der = sub { $_write_pubkey_to_der->( $_[0], _ptr( $_[1] ) ) };
-    *write_pubkey_to_pem = sub { $_write_pubkey_to_pem->( $_[0], _ptr( $_[1] ) ) };
-    *print_pkey_gettable_params = sub { $_print_pkey_gettable_params->( _ptr( $_[0] ) ) };
     *sgn0_m_eq_1 = sub { $_sgn0_m_eq_1->( _ptr( $_[0] ) ) };
     *clear_cofactor = sub { $_clear_cofactor->( map { _ptr($_) } @_ ) };
     *CMOV = sub { _obj( $_CMOV->( _ptr( $_[0] ), _ptr( $_[1] ), $_[2] ), 'Crypt::OpenSSL::Bignum' ) };
@@ -311,6 +265,119 @@ my $_map_to_curve_sswu_not_straight_line = \&map_to_curve_sswu_not_straight_line
 }
 
 sub bn_mod_sqrt { _obj( _bn_mod_sqrt( _ptr( $_[0] ), _ptr( $_[1] ) ), 'Crypt::OpenSSL::Bignum' ) }
+
+sub read_key {
+    my $ptr = _read_key( _ptr( $_[0] ) );
+    return _string_from_ptr($ptr);
+}
+
+sub read_key_from_der {
+    return _obj( _read_key_from_der(@_), 'Crypt::OpenSSL::EC::EVP_PKEY' );
+}
+
+sub read_key_from_pem {
+    return _obj( _read_key_from_pem(@_), 'Crypt::OpenSSL::EC::EVP_PKEY' );
+}
+
+sub read_pubkey_from_der {
+    return _obj( _read_pubkey_from_der(@_), 'Crypt::OpenSSL::EC::EVP_PKEY' );
+}
+
+sub read_pubkey_from_pem {
+    return _obj( _read_pubkey_from_pem(@_), 'Crypt::OpenSSL::EC::EVP_PKEY' );
+}
+
+sub read_pubkey {
+    my $ptr = _read_pubkey( _ptr( $_[0] ) );
+    return _string_from_ptr($ptr);
+}
+
+sub read_ec_pubkey {
+    my $ptr = _read_ec_pubkey( _ptr( $_[0] ), $_[1] );
+    return _string_from_ptr($ptr);
+}
+
+sub get_pkey_bn_param {
+    return _obj( _get_pkey_bn_param( _ptr( $_[0] ), $_[1] ), 'Crypt::OpenSSL::Bignum' );
+}
+
+sub get_pkey_utf8_string_param {
+    my $ptr = _get_pkey_utf8_string_param( _ptr( $_[0] ), $_[1] );
+    return _string_from_ptr($ptr);
+}
+
+sub export_rsa_pubkey {
+    return _obj( _export_rsa_pubkey( _ptr( $_[0] ) ), 'Crypt::OpenSSL::EC::EVP_PKEY' );
+}
+
+sub gen_ec_key {
+    return _obj( _gen_ec_key( $_[0], $_[1] // '' ), 'Crypt::OpenSSL::EC::EVP_PKEY' );
+}
+
+sub gen_ec_pubkey {
+    return _obj( _gen_ec_pubkey(@_), 'Crypt::OpenSSL::EC::EVP_PKEY' );
+}
+
+sub export_ec_pubkey {
+    return _obj( _export_ec_pubkey( _ptr( $_[0] ) ), 'Crypt::OpenSSL::EC::EVP_PKEY' );
+}
+
+sub write_key_to_der {
+    return _write_key_to_der( $_[0], _ptr( $_[1] ) );
+}
+
+sub write_key_to_pem {
+    return _write_key_to_pem( $_[0], _ptr( $_[1] ) );
+}
+
+sub write_pubkey_to_der {
+    return _write_pubkey_to_der( $_[0], _ptr( $_[1] ) );
+}
+
+sub write_pubkey_to_pem {
+    return _write_pubkey_to_pem( $_[0], _ptr( $_[1] ) );
+}
+
+sub print_pkey_gettable_params {
+    return _print_pkey_gettable_params( _ptr( $_[0] ) );
+}
+
+sub EC_GROUP_get0_order {
+    return _EC_GROUP_get0_order( _ptr( $_[0] ) );
+}
+
+sub EC_GROUP_get_curve {
+    return _EC_GROUP_get_curve( map { _ptr($_) } @_ );
+}
+
+sub EC_POINT_new {
+    return _obj( _EC_POINT_new( _ptr( $_[0] ) ), 'Crypt::OpenSSL::EC::EC_POINT' );
+}
+
+sub EC_POINT_invert {
+    return _EC_POINT_invert( map { _ptr($_) } @_ );
+}
+
+sub EC_POINT_add {
+    return _EC_POINT_add( map { _ptr($_) } @_ );
+}
+
+sub EC_POINT_set_affine_coordinates {
+    return _EC_POINT_set_affine_coordinates( map { _ptr($_) } @_ );
+}
+
+sub EC_POINT_get_affine_coordinates {
+    return _EC_POINT_get_affine_coordinates( map { _ptr($_) } @_ );
+}
+
+sub EC_POINT_point2hex {
+    my $ptr = _EC_POINT_point2hex( _ptr( $_[0] ), _ptr( $_[1] ), $_[2], _ptr( $_[3] ) );
+    return _string_from_ptr($ptr);
+}
+
+sub EVP_PKEY_get1_EC_KEY {
+    return _obj( _EVP_PKEY_get1_EC_KEY( _ptr( $_[0] ) ), 'Crypt::OpenSSL::EC::EC_KEY' );
+}
 
 # sub mul_ec_point { _obj( _mul_ec_point( $_[0], _ptr( $_[1] ), _ptr( $_[2] ), _ptr( $_[3] ) ), 'Crypt::OpenSSL::EC::EC_POINT' ) }
 # sub gen_ec_point { _obj( _gen_ec_point( $_[0], _ptr( $_[1] ), _ptr( $_[2] ), $_[3] ), 'Crypt::OpenSSL::EC::EC_POINT' ) }
@@ -403,6 +470,13 @@ sub ecdsa_sign {
     $msg //= '';
     my $ptr;
     my $len = _ecdsa_sign( _ptr($priv_key), $digest_name, $msg, length($msg), \$ptr );
+    return _bytes_from_ptr( $ptr, $len );
+}
+
+sub BN_bn2bin {
+    my ($bn) = @_;
+    my $ptr;
+    my $len = _BN_bn2bin->( _ptr($bn), $ptr );
     return _bytes_from_ptr( $ptr, $len );
 }
 
