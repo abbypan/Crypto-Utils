@@ -109,6 +109,7 @@ sub sample_scalar {
   #my $order =  EC_GROUP_get0_order( $group );
   my $order = BN_new();
   EC_GROUP_get_order($group, $order, $ctx);
+
   my $two = Crypt::OpenSSL::Bignum->new_from_word( 2 );
   $order->sub( $two );
 
@@ -124,7 +125,11 @@ sub scalar_mult {
 
   $rnd = sample_scalar( $group, $ctx ) unless ( $rnd );
 
-  my $zero = Crypt::OpenSSL::Bignum->zero;
+  #my $zero = Crypt::OpenSSL::Bignum->zero;
+
+  my $zero = BN_new();
+  BN_zero($zero);
+
   my $R    = EC_POINT_new( $group );
   EC_POINT_mul( $group, $R, $zero, $G, $rnd, $ctx );
 
