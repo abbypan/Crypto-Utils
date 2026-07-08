@@ -21,6 +21,7 @@ our @ISA = qw(Exporter);
 
 our @OSSLF= qw(
 BN_bn2hex
+BN_hex2bn
 OPENSSL_free
 EC_POINT_invert
 EC_POINT_add
@@ -44,6 +45,9 @@ EC_GROUP_get_order
 BN_new
 BN_copy
 BN_sub
+BN_value_one
+BN_one
+BN_zero
 );
 
 our @FFIF = qw(
@@ -132,7 +136,7 @@ my $ffi = FFI::Platypus->new( api => 1 );
 $ffi->bundle('Crypto::Utils');
 
 my $crypto = FFI::Platypus->new( api => 1 );
-$crypto->lib( find_lib_or_die( lib => 'crypto' ) );
+$crypto->lib( $ENV{CRYPTO_LIB} || find_lib_or_die( lib => 'crypto' ) );
 
 sub _ptr {
     my ($obj) = @_;
@@ -181,6 +185,7 @@ $crypto->attach( 'EVP_DigestInit_ex2' => [ 'opaque', 'opaque', 'opaque' ] => 'in
 $crypto->attach( 'EVP_DigestUpdate' => [ 'opaque', 'string', 'size_t' ] => 'int' );
 $crypto->attach( 'EVP_DigestFinal_ex' => [ 'opaque', 'opaque', 'uint*' ] => 'int' );
 $crypto->attach( [ BN_bn2hex => '_BN_bn2hex' ] => ['opaque'] => 'opaque' );
+$crypto->attach( [ BN_hex2bn => '_BN_hex2bn' ] => [ 'opaque*', 'string' ] => 'int' );
 $crypto->attach( [ BN_new => '_BN_new' ] => [] => 'opaque' );
 $crypto->attach( [ BN_copy => '_BN_copy' ] => [ 'opaque', 'opaque' ] => 'opaque' );
 $crypto->attach( [ BN_bn2bin => '_BN_bn2bin' ] => [ 'opaque', 'opaque' ] => 'int' );
@@ -204,6 +209,9 @@ $ffi->attach( 'slurp' => [ 'string', 'opaque*' ] => 'size_t' );
 $ffi->attach( [ point2hex => '_point2hex' ] => [ 'string', 'opaque', 'int' ] => 'opaque' );
 $ffi->attach( [ hex2point => '_hex2point' ] => [ 'string', 'string' ] => 'opaque' );
 $ffi->attach( [ hex2bn => '_hex2bn' ] => ['string'] => 'opaque' );
+$ffi->attach( [ bn_value_one => '_BN_value_one' ] => [] => 'opaque' );
+$ffi->attach( [ bn_one => '_BN_one' ] => ['opaque'] => 'int' );
+$ffi->attach( [ bn_zero => '_BN_zero' ] => ['opaque'] => 'void' );
 $ffi->attach( 'bin2hex' => [ 'string', 'size_t' ] => 'string' );
 $ffi->attach( [ get_pkey_bn_param => '_get_pkey_bn_param' ] => [ 'opaque', 'string' ] => 'opaque' );
 $ffi->attach( [ get_pkey_octet_string_param => '_get_pkey_octet_string_param' ] => [ 'opaque', 'string', 'opaque*' ] => 'size_t' );
@@ -253,6 +261,34 @@ sub BN_bn2hex {
     return _string_from_ptr($ptr);
 }
 
+sub BN_hex2bn {
+    my ( $bn_ref, $hex_str ) = @_;
+    croak "BN_hex2bn: hex string is required" unless defined $hex_str;
+
+    if ( ref($bn_ref) eq 'REF' || ref($bn_ref) eq 'SCALAR' ) {
+        my $bn = $$bn_ref;
+        my $raw_ptr = _ptr($bn);
+        my $ret = _BN_hex2bn( \$raw_ptr, $hex_str );
+        if ($ret) {
+            $$bn_ref = _obj( $raw_ptr, 'Crypt::OpenSSL::Bignum' );
+        }
+        return $ret;
+    }
+
+    if ( ref($bn_ref) eq 'Crypt::OpenSSL::Bignum' ) {
+        my $raw_ptr = _ptr($bn_ref);
+        my $ret = _BN_hex2bn( \$raw_ptr, $hex_str );
+        if ($ret) {
+            $$bn_ref = $raw_ptr;
+        }
+        return $ret;
+    }
+
+    my $raw_ptr = _ptr($bn_ref);
+    my $ret = _BN_hex2bn( \$raw_ptr, $hex_str );
+    return $ret;
+}
+
 sub BN_new {
     return _obj( _BN_new(), 'Crypt::OpenSSL::Bignum' );
 }
@@ -272,6 +308,20 @@ sub hex2point {
 
 sub hex2bn {
     return _obj( _hex2bn(@_), 'Crypt::OpenSSL::Bignum' );
+}
+
+sub BN_value_one {
+    return _obj( _BN_value_one(), 'Crypt::OpenSSL::Bignum' );
+}
+
+sub BN_one {
+    _BN_one( _ptr( $_[0] ) );
+    return $_[0];
+}
+
+sub BN_zero {
+    _BN_zero( _ptr( $_[0] ) );
+    return $_[0];
 }
 
 sub mul_ec_point {

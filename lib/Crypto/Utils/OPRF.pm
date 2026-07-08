@@ -80,8 +80,8 @@ sub derive_key_pair {
     ### xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
     my $ec_key_r = generate_ec_key($group_name, BN_bn2hex($skS));
     ### yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
-    use Data::Dumper;
-    print Dumper($ec_key_r);
+    #use Data::Dumper;
+    #print Dumper($ec_key_r);
     ### $ec_key_r
 
     #my $pkS_point = $ec_key_r->{pub_point};
@@ -113,7 +113,9 @@ sub blind {
     my $P = hash_to_curve( $input, $DSI, $group_name, $type, $hash_name, $expand_message_func, $clear_cofactor_flag );
     return if(EC_POINT_is_at_infinity( $ec_params_r->{group}, $P ));
 
-    my $zero = Crypt::OpenSSL::Bignum->zero;
+    my $zero = BN_new();
+    BN_zero($zero);
+  #  my $zero = Crypt::OpenSSL::Bignum->zero;
     my $blindedElement    = EC_POINT_new( $ec_params_r->{group} );
     EC_POINT_mul( $ec_params_r->{group}, $blindedElement, $zero, $P, $blind, $ec_params_r->{ctx} );
 
