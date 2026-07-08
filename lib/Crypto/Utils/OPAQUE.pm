@@ -7,13 +7,10 @@ use warnings;
 
 require Exporter;
 
-#use Crypt::KeyDerivation ':all';
-
 use Carp;
+
+use Storable qw(dclone);
 use Crypto::Utils::OpenSSL;
-use Crypt::OpenSSL::EC;
-use Crypt::OpenSSL::Bignum;
-#use Crypt::OpenSSL::ECDSA;
 use Crypto::Utils::OPRF;
 
 #use Smart::Comments;

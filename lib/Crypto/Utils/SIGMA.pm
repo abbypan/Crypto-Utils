@@ -11,7 +11,7 @@ use Carp;
 #use Crypt::KeyDerivation ':all';
 
 use Crypto::Utils::OpenSSL;
-use Crypt::OpenSSL::EC;
+#use Crypt::OpenSSL::EC;
 use Crypt::OpenSSL::Bignum;
 #use Crypt::OpenSSL::ECDSA;
 
@@ -63,7 +63,6 @@ sub derive_z_ke_km {
 sub derive_ks {
   my ( $z, $na, $nb, $hash_name, $key_len ) = @_;
 
-  #my $ks = Crypt::KeyDerivation::hkdf( $z, $na . $nb, $hash_name, $key_len, "sigma session key" );
   my $ks = hkdf( $hash_name, $z, $na . $nb, "sigma session key", $key_len );
 }
 
@@ -74,8 +73,7 @@ sub a_send_msg1 {
 
   my $na = Crypt::OpenSSL::Bignum->rand_range( $random_range );
 
-  #my $nid = Crypt::OpenSSL::EC::EC_GROUP::get_curve_name($group);
-  #my $group_name = OBJ_nid2sn($nid);
+
   my $ek_key_a_r = generate_ec_key( $group_name, undef );
 
   my $msg1 = $pack_msg_func->( [ $ek_key_a_r->{pub_bin}, $na->to_bin, $other_data_a ] );
@@ -94,8 +92,6 @@ sub b_recv_msg1 {
   ### b_recv_na: unpack("H*", $b_recv_na)
   ### b_recv_other_data_a: unpack("H*", $b_recv_other_data_a)
 
-  #my $nid = Crypt::OpenSSL::EC::EC_GROUP::get_curve_name($group);
-  #my $group_name = OBJ_nid2sn($nid);
   my $b_recv_ek_a_pub_pkey = gen_ec_pubkey( $group_name, unpack( "H*", $b_recv_ek_a_pub ));
 
   return { na => $b_recv_na, gx => $b_recv_ek_a_pub, gx_pkey => $b_recv_ek_a_pub_pkey, other_data_a => $b_recv_other_data_a, };
@@ -121,9 +117,6 @@ sub b_send_msg2 {
 
   #nb, ek
   my $nb         = Crypt::OpenSSL::Bignum->rand_range( $random_range );
-
-  #my $nid = Crypt::OpenSSL::EC::EC_GROUP::get_curve_name($group);
-  #my $group_name = OBJ_nid2sn($nid);
 
   my $ek_key_b_r = generate_ec_key( $group_name, undef );
 
@@ -152,8 +145,7 @@ sub a_recv_msg2 {
   ### a_recv_ek_b_pub: unpack("H*", $a_recv_ek_b_pub)
   ### a_recv_nb: unpack("H*", $a_recv_nb)
   ### a_recv_cipher_info: unpack("H*", $a_recv_cipher_info)
-  #my $nid = Crypt::OpenSSL::EC::EC_GROUP::get_curve_name($group);
-  #my $group_name = OBJ_nid2sn($nid);
+  
   my $a_recv_ek_b_pub_pkey = gen_ec_pubkey( $group_name, unpack( "H*", $a_recv_ek_b_pub ));
 
   my $key_r = derive_z_ke_km( $ek_key_a_r->{priv_pkey}, $a_recv_ek_b_pub_pkey, $hash_name, $key_len );

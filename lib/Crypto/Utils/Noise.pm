@@ -8,18 +8,12 @@ use warnings;
 
 require Exporter;
 
-use Crypt::OpenSSL::EC;
-use Crypt::OpenSSL::Bignum;
-
 #use Smart::Comments;
-
-#use Crypt::OpenSSL::Hash2Curve;
-use Crypto::Utils::OpenSSL;
+use Carp;
 
 use Storable qw(dclone);
-#use Digest::HMAC qw(hmac);
-#use Crypt::KeyDerivation ':all';
-use Carp;
+use Crypto::Utils::OpenSSL;
+
 
 our $VERSION = 0.012;
 

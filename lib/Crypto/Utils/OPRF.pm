@@ -7,8 +7,8 @@ use warnings;
 
 require Exporter;
 
-#use List::Util qw/min/;
-use Crypt::OpenSSL::Bignum;
+
+
 use Crypto::Utils::OpenSSL;
 
 #use Smart::Comments;
