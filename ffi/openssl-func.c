@@ -829,32 +829,40 @@ BF_EXPORT unsigned char *write_pubkey_to_pem(unsigned char *dst_fname,
 
 BF_EXPORT int ecdsa_sign(EVP_PKEY *priv_key, const char *digest_name, char *msg,
                          int msg_len, unsigned char **sig) {
-
-  const char *propq = NULL;
-  OSSL_LIB_CTX *libctx = NULL;
   size_t sig_len = 0;
-  unsigned char *sig_value = NULL;
   EVP_MD_CTX *sign_context = NULL;
+  const EVP_MD *md = EVP_get_digestbyname(digest_name);
 
-  libctx = OSSL_LIB_CTX_new();
   sign_context = EVP_MD_CTX_new();
+  if (!sign_context) return -1;
 
-  EVP_DigestSignInit_ex(sign_context, NULL, digest_name, libctx, NULL, priv_key,
-                        NULL);
+  if (EVP_DigestSignInit(sign_context, NULL, md, NULL, priv_key) <= 0) {
+    EVP_MD_CTX_free(sign_context);
+    return -1;
+  }
 
-  EVP_DigestSignUpdate(sign_context, msg, msg_len);
+  if (EVP_DigestSignUpdate(sign_context, msg, msg_len) <= 0) {
+    EVP_MD_CTX_free(sign_context);
+    return -1;
+  }
 
-  EVP_DigestSignFinal(sign_context, NULL, &sig_len);
+  if (EVP_DigestSignFinal(sign_context, NULL, &sig_len) <= 0) {
+    EVP_MD_CTX_free(sign_context);
+    return -1;
+  }
 
   *sig = OPENSSL_malloc(sig_len);
+  if (!*sig) {
+    EVP_MD_CTX_free(sign_context);
+    return -1;
+  }
 
-  if (!EVP_DigestSignFinal(sign_context, *sig, &sig_len)) {
+  if (EVP_DigestSignFinal(sign_context, *sig, &sig_len) <= 0) {
     OPENSSL_free(*sig);
     sig_len = -1;
   }
 
   EVP_MD_CTX_free(sign_context);
-  OSSL_LIB_CTX_free(libctx);
 
   return sig_len;
 }
@@ -862,24 +870,22 @@ BF_EXPORT int ecdsa_sign(EVP_PKEY *priv_key, const char *digest_name, char *msg,
 BF_EXPORT int ecdsa_verify(EVP_PKEY *pub_key, const char *digest_name,
                            char *msg, int msg_len, unsigned char *sig,
                            int sig_len) {
-
-  const char *propq = NULL;
-  OSSL_LIB_CTX *libctx = NULL;
-  unsigned char *sig_value = NULL;
   EVP_MD_CTX *verify_context = NULL;
+  const EVP_MD *md = EVP_get_digestbyname(digest_name);
 
-  libctx = OSSL_LIB_CTX_new();
   verify_context = EVP_MD_CTX_new();
+  if (!verify_context) return -1;
 
-  EVP_DigestVerifyInit_ex(verify_context, NULL, digest_name, libctx, NULL,
-                          pub_key, NULL);
+  if (EVP_DigestVerifyInit(verify_context, NULL, md, NULL, pub_key) <= 0) {
+    EVP_MD_CTX_free(verify_context);
+    return -1;
+  }
 
   EVP_DigestVerifyUpdate(verify_context, msg, msg_len);
 
   int ret = EVP_DigestVerifyFinal(verify_context, sig, sig_len);
 
   EVP_MD_CTX_free(verify_context);
-  OSSL_LIB_CTX_free(libctx);
 
   return ret;
 }

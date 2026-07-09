@@ -22,6 +22,8 @@ our @ISA = qw(Exporter);
 our @OSSLF= qw(
 BN_bn2hex
 BN_hex2bn
+BN_dec2bn
+BN_bin2bn
 OPENSSL_free
 EC_POINT_invert
 EC_POINT_add
@@ -207,6 +209,8 @@ $crypto->attach( 'EVP_DigestUpdate' => [ 'opaque', 'string', 'size_t' ] => 'int'
 $crypto->attach( 'EVP_DigestFinal_ex' => [ 'opaque', 'opaque', 'uint*' ] => 'int' );
 $crypto->attach( [ BN_bn2hex => '_BN_bn2hex' ] => ['opaque'] => 'opaque' );
 $crypto->attach( [ BN_hex2bn => '_BN_hex2bn' ] => [ 'opaque*', 'string' ] => 'int' );
+$crypto->attach( [ BN_dec2bn => '_BN_dec2bn' ] => [ 'opaque*', 'string' ] => 'int' );
+$crypto->attach( [ BN_bin2bn => '_BN_bin2bn' ] => [ 'string', 'int', 'opaque' ] => 'opaque' );
 $crypto->attach( [ BN_new => '_BN_new' ] => [] => 'opaque' );
 $crypto->attach( [ BN_CTX_new => '_BN_CTX_new' ] => [] => 'opaque' );
 $crypto->attach( [ BN_copy => '_BN_copy' ] => [ 'opaque', 'opaque' ] => 'opaque' );
@@ -309,6 +313,28 @@ sub BN_hex2bn {
     return $ret;
 }
 
+sub BN_dec2bn {
+    my ( $bn_ref, $dec_str ) = @_;
+    croak "BN_dec2bn: decimal string is required" unless defined $dec_str;
+
+    my $raw_ptr = _ptr($bn_ref);
+    my $ret = _BN_dec2bn( \$raw_ptr, $dec_str );
+    return $ret;
+}
+
+sub BN_bin2bn {
+    my ( $bytes, $len, $ret ) = @_;
+    croak "BN_bin2bn: binary string is required" unless defined $bytes;
+    $len //= length($bytes);
+
+    if (defined $ret) {
+        _BN_bin2bn( $bytes, $len, _ptr($ret) );
+        return $ret;
+    } else {
+        return _obj( _BN_bin2bn( $bytes, $len, undef ), 'Crypt::OpenSSL::Bignum' );
+    }
+}
+
 sub BN_new {
     return _obj( _BN_new(), 'Crypt::OpenSSL::Bignum' );
 }
@@ -330,8 +356,15 @@ sub BN_sub {
 }
 
 sub BN_mod {
-    my ($rem, $m, $d, $ctx) = @_;
-    return _BN_div( undef, _ptr($rem), _ptr($m), _ptr($d), _ptr($ctx) );
+    if (scalar @_ == 3) {
+        my ($a, $b, $ctx) = @_;
+        my $rem = BN_new();
+        _BN_div( undef, _ptr($rem), _ptr($a), _ptr($b), _ptr($ctx) );
+        return $rem;
+    } else {
+        my ($rem, $m, $d, $ctx) = @_;
+        return _BN_div( undef, _ptr($rem), _ptr($m), _ptr($d), _ptr($ctx) );
+    }
 }
 
 sub bn_mod {
@@ -358,7 +391,8 @@ sub _get_cached_group {
 sub point2hex {
     my ($group_or_name, $point, $conv_form) = @_;
     my $group = _get_cached_group($group_or_name);
-    my $ctx = Crypt::OpenSSL::Bignum::CTX->new();
+
+    my $ctx = BN_CTX_new();
     my $ptr = _EC_POINT_point2hex( _ptr($group), _ptr($point), $conv_form, _ptr($ctx) );
     return _string_from_ptr($ptr);
 }
@@ -366,7 +400,7 @@ sub point2hex {
 sub hex2point {
     my ($group_or_name, $hex) = @_;
     my $group = _get_cached_group($group_or_name);
-    my $ctx = Crypt::OpenSSL::Bignum::CTX->new();
+    my $ctx = BN_CTX_new();
     my $point = EC_POINT_new($group);
     _EC_POINT_hex2point( _ptr($group), $hex, _ptr($point), _ptr($ctx) );
     return $point;
@@ -393,7 +427,7 @@ sub BN_zero {
 sub mul_ec_point {
     my ($group_or_name, $x, $Q, $y) = @_;
     my $group = _get_cached_group($group_or_name);
-    my $ctx = Crypt::OpenSSL::Bignum::CTX->new();
+    my $ctx =  BN_CTX_new();
     my $P = EC_POINT_new($group);
     EC_POINT_mul($group, $P, $x, $Q, $y, $ctx);
     return $P;
@@ -405,7 +439,7 @@ sub EC_POINT_copy {
 
 sub clear_cofactor {
     my ($group, $P, $Q, $ctx) = @_;
-    my $cofactor = Crypt::OpenSSL::Bignum->new();
+    my $cofactor = BN_new();
     EC_GROUP_get_cofactor($group, $cofactor, $ctx);
     if ($cofactor->is_one || $cofactor->is_zero) {
         EC_POINT_copy($P, $Q);
@@ -417,7 +451,7 @@ sub clear_cofactor {
 
 sub gen_ec_point {
     my ($group, $x, $y, $clear_cofactor_flag) = @_;
-    my $ctx = Crypt::OpenSSL::Bignum::CTX->new();
+    my $ctx = BN_CTX_new();
     my $Q = EC_POINT_new($group);
     EC_POINT_set_affine_coordinates($group, $Q, $x, $y, $ctx);
     if ($clear_cofactor_flag) {
@@ -596,24 +630,7 @@ sub EVP_PKEY_get1_EC_KEY {
     return _obj( _EVP_PKEY_get1_EC_KEY( _ptr( $_[0] ) ), 'Crypt::OpenSSL::EC::EC_KEY' );
 }
 
-# sub mul_ec_point { _obj( _mul_ec_point( $_[0], _ptr( $_[1] ), _ptr( $_[2] ), _ptr( $_[3] ) ), 'Crypt::OpenSSL::EC::EC_POINT' ) }
-# sub gen_ec_point { _obj( _gen_ec_point( $_[0], _ptr( $_[1] ), _ptr( $_[2] ), $_[3] ), 'Crypt::OpenSSL::EC::EC_POINT' ) }
-# sub gen_ec_key { _obj( _gen_ec_key( $_[0], $_[1] // '' ), 'Crypt::OpenSSL::EC::EVP_PKEY' ) }
-# sub gen_ec_pubkey { _obj( _gen_ec_pubkey(@_), 'Crypt::OpenSSL::EC::EVP_PKEY' ) }
-# sub export_ec_pubkey { _obj( _export_ec_pubkey( _ptr( $_[0] ) ), 'Crypt::OpenSSL::EC::EVP_PKEY' ) }
-# sub write_key_to_der { _write_key_to_der( $_[0], _ptr( $_[1] ) ) }
-# sub write_key_to_pem { _write_key_to_pem( $_[0], _ptr( $_[1] ) ) }
-# sub write_pubkey_to_der { _write_pubkey_to_der( $_[0], _ptr( $_[1] ) ) }
-# sub write_pubkey_to_pem { _write_pubkey_to_pem( $_[0], _ptr( $_[1] ) ) }
-# sub print_pkey_gettable_params { _print_pkey_gettable_params( _ptr( $_[0] ) ) }
-# sub sgn0_m_eq_1 { _sgn0_m_eq_1( _ptr( $_[0] ) ) }
-# sub clear_cofactor { _clear_cofactor( map { _ptr($_) } @_ ) }
-# sub CMOV { _obj( _CMOV( _ptr( $_[0] ), _ptr( $_[1] ), $_[2] ), 'Crypt::OpenSSL::Bignum' ) }
-# sub calc_c1_c2_for_sswu { _calc_c1_c2_for_sswu( map { _ptr($_) } @_ ) }
-# sub map_to_curve_sswu_straight_line { _map_to_curve_sswu_straight_line( map { _ptr($_) } @_ ) }
-# sub map_to_curve_sswu_not_straight_line { _map_to_curve_sswu_not_straight_line( map { _ptr($_) } @_ ) }
-
- sub ecdh {
+sub ecdh {
      my $len = 0;
      my $ptr = _ecdh( _ptr( $_[0] ), _ptr( $_[1] ), \$len );
      return _bytes_from_ptr( $ptr, $len );
@@ -866,7 +883,9 @@ sub generate_ec_key {
 
     my $priv_pkey = gen_ec_key($group_name, $priv_hex || '');
     $priv_hex = read_key($priv_pkey);
-    my $priv_bn  = Crypt::OpenSSL::Bignum->new_from_hex($priv_hex);
+
+    my $priv_bn  = BN_new();
+    BN_hex2bn($priv_bn, $priv_hex);
    
     ### $priv_hex
 
@@ -902,12 +921,11 @@ sub get_ec_params {
 
     my $nid   = OBJ_sn2nid( $group_name );
     my $group = EC_GROUP_new_by_curve_name( $nid );
-    my $ctx   = Crypt::OpenSSL::Bignum::CTX->new();
+    my $ctx   = BN_CTX_new();
 
-
-    my $p = Crypt::OpenSSL::Bignum->new();
-    my $a = Crypt::OpenSSL::Bignum->new();
-    my $b = Crypt::OpenSSL::Bignum->new();
+    my $p = BN_new();
+    my $a = BN_new();
+    my $b = BN_new();
     EC_GROUP_get_curve( $group, $p, $a, $b, $ctx );
 
     my $degree = EC_GROUP_get_degree($group);
@@ -915,7 +933,7 @@ sub get_ec_params {
     my $order = BN_new();
     EC_GROUP_get_order($group, $order, $ctx);
 
-    my $cofactor = Crypt::OpenSSL::Bignum->new();
+    my $cofactor = BN_new();
     EC_GROUP_get_cofactor($group, $cofactor, $ctx);
 
     return {
@@ -955,9 +973,11 @@ sub get_hash2curve_params {
     $ec_params_r->{$_} = $H2C_CNF{$group_name}{$_} for keys(%{$H2C_CNF{$group_name}});
 
     if($type eq 'sswu'){
-        my $z = Crypt::OpenSSL::Bignum->new_from_decimal( $H2C_CNF{$group_name}{$type}{z} );
-        my $c1 = Crypt::OpenSSL::Bignum->new();
-        my $c2 = Crypt::OpenSSL::Bignum->new();
+        my $z = BN_new();
+        BN_dec2bn($z, $H2C_CNF{$group_name}{$type}{z});
+
+        my $c1 = BN_new();
+        my $c2 = BN_new();
         $H2C_CNF{$group_name}{$type}{calc_c1_c2_func}->( $c1, $c2, 
             @{$ec_params_r}{qw/p a b/}, 
             $z, 
@@ -1019,8 +1039,8 @@ sub map_to_curve {
 
   #my ( $group, $c1, $c2, $p, $a, $b, $z, $ctx ) = @$params_ref;
 
-  my $x = Crypt::OpenSSL::Bignum->new();
-  my $y = Crypt::OpenSSL::Bignum->new();
+  my $x = BN_new();
+  my $y = BN_new();
   $H2C_CNF{$group_name}{$type}{map_to_curve_func}->( 
       @{$params_ref}{qw/c1 c2 p a b z/}, 
       $u, $x, $y, $params_ref->{ctx} );
@@ -1044,7 +1064,7 @@ sub map_to_curve {
 sub hash_to_field {
   my ( $msg, $count, $DST, $p, $m, $k, $hash_name, $expand_message_func ) = @_;
 
-  my $ctx = Crypt::OpenSSL::Bignum::CTX->new();
+  my $ctx = BN_CTX_new();
 
   my $L = $p->num_bits;
   $L = ceil(($L + $k)/8);
@@ -1062,11 +1082,11 @@ sub hash_to_field {
       my $elm_offset = $L * ( $j + $i * $m );
       my $tv         = substr( $uniform_bytes, $elm_offset, $L );
 
-      my $tv_bn =  Crypt::OpenSSL::Bignum->new_from_bin( $tv );
-      my $reminder = $tv_bn->mod($p, $ctx);
-      ### reminder: $reminder->to_hex()
-      ### reminder: $reminder->to_decimal()
-      
+      my $tv_bn =  BN_new();
+      BN_bin2bn($tv, length($tv), $tv_bn);
+
+      my $reminder = BN_mod($tv_bn, $p, $ctx);
+
       push @u, $reminder;
     }
     push @res, \@u;
@@ -1077,7 +1097,6 @@ sub hash_to_field {
 sub expand_message_xmd {
   my ( $msg, $DST, $len_in_bytes, $hash_name ) = @_;
 
-  #my $h_r = Crypt::OpenSSL::EVP::MD->new( $hash_name );
   my $h_r = EVP_get_digestbyname( $hash_name );
 
   my $hash_size = EVP_MD_get_size( $h_r );
@@ -1221,8 +1240,6 @@ RFC7914 : Scrypt
 
 =head3  random_bn
 
-    my $random_bn = random_bn($Nn);
-
     my $Nn = 16;
     my $random_bn = random_bn($Nn);
     print BN_bn2hex($random_bn), "\n";
@@ -1313,7 +1330,6 @@ RFC7914 : Scrypt
 
 https://datatracker.ietf.org/doc/draft-irtf-cfrg-hash-to-curve/
 
-    use Crypt::OpenSSL::Bignum;
     use Crypto::Utils::OpenSSL;
 
     my $msg='abc';
