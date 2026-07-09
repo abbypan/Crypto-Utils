@@ -94,7 +94,7 @@ sub create_credential_response {
     $hash_name, $expand_message_func, $point_compress_t
   );
 
-  my $masking_nonce_bn = ( ref( $Nn ) eq 'Crypt::OpenSSL::Bignum' ) ? $Nn : random_bn( $Nn );
+  my $masking_nonce_bn = ref( $Nn )  ? $Nn : random_bn( $Nn );
   my $masking_nonce    = $masking_nonce_bn->to_bin;
   ### masking_nonce: unpack("H*", $masking_nonce)
 
@@ -249,8 +249,7 @@ sub create_cleartext_credentials {
 sub store {
   my ( $randomized_pwd, $s_pub, $s_id, $c_id, $Nn, $Nseed, $group_name, $info, $DST, $hash_name, $expand_message_func, $mac_func ) =
     @_;
-
-  my $envelope_nonce_bn = ( ref( $Nn ) eq 'Crypt::OpenSSL::Bignum' ) ? $Nn : random_bn( $Nn );
+  my $envelope_nonce_bn = ref( $Nn )? $Nn : random_bn( $Nn );
   my $envelope_nonce    = $envelope_nonce_bn->to_bin;
 
   my $hash_func   = EVP_get_digestbyname( $hash_name );

@@ -22,7 +22,6 @@ use Crypto::Utils::SIGMA;
 #use Crypt::AuthEnc::GCM qw(gcm_encrypt_authenticate gcm_decrypt_verify);
 
 use Crypto::Utils::OpenSSL;
-use Crypt::OpenSSL::EC;
 use Crypt::OpenSSL::Bignum;
 #use Crypt::OpenSSL::ECDSA;
 

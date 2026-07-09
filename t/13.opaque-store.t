@@ -1,14 +1,16 @@
 use strict;
 use warnings;
 
-use lib '../lib';
+use FindBin qw($Bin);
+
+use lib "$FindBin::RealBin/../lib";
 
 #use Digest::SHA qw/hmac_sha256 sha256/;
 
 use Test::More ;
-use Crypt::OpenSSL::EC;
+
 use Crypt::OpenSSL::Bignum;
-use Crypto::Utils::OpenSSL;
+use Crypto::Utils::OpenSSL qw(BN_new BN_hex2bn BN_bn2hex expand_message_xmd hmac);
 
 use Crypto::Utils::OPRF;
 use Crypto::Utils::OPAQUE;
@@ -50,7 +52,8 @@ my $c_id = 'alice';
 my $s_id = 'bob';
 my $Nseed = 32;
 #my $Nn = 32;
-my $Nn  = Crypt::OpenSSL::Bignum->new_from_hex('a921f2a014513bd8a90e477a629794e89fec12d12206dde662ebdcf65670e51f');
+my $Nn  = BN_new();
+BN_hex2bn($Nn, 'a921f2a014513bd8a90e477a629794e89fec12d12206dde662ebdcf65670e51f');
 
 my $store_r = store($randomized_pwd, $s_pub, $s_id, $c_id, $Nn, $Nseed, $group_name, $info, $DST, $hash_name, $expand_message_func, sub { hmac('SHA256', $_[1], $_[0]) });
 ### auth_tag: unpack("H*", $store_r->{envelope}{auth_tag})

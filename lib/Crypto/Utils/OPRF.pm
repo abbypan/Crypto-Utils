@@ -73,30 +73,10 @@ sub derive_key_pair {
         $counter++;
     }
 
-    ### skS hex: $skS->to_hex()
-    ### skS decimal: $skS->to_decimal()
-
-    #my $ec_key_r = generate_ec_key($ec_params_r->{group}, $skS, 2, $ec_params_r->{ctx});
-    ### xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 
+   
+  
     my $ec_key_r = generate_ec_key($group_name, BN_bn2hex($skS));
-    ### yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
-    #use Data::Dumper;
-    #print Dumper($ec_key_r);
-    ### $ec_key_r
-
-    #my $pkS_point = $ec_key_r->{pub_point};
-
-    #my $skS_key = Crypt::OpenSSL::EC::EC_KEY::new();
-    #$skS_key->set_group($group);
-    #$skS_key->set_private_key($skS);
-
-    #my $pkS_point = Crypt::OpenSSL::EC::EC_KEY::get0_public_key($skS_key);
-    #my $pkS_key = Crypt::OpenSSL::EC::EC_KEY::new();
-    #Crypt::OpenSSL::EC::EC_KEY::set_group($pkS_key, $group);
-    #Crypt::OpenSSL::EC::EC_KEY::set_public_key($pkS_key, $pkS_point);
-
-    #return ($skS_key, $pkS_key);
-    #return ($skS, $pkS_point);
+ 
     return $ec_key_r;
 }
 
@@ -106,7 +86,8 @@ sub blind {
     my $ec_params_r = get_ec_params($group_name);
 
     if(!$blind){
-        $blind = Crypt::OpenSSL::Bignum->rand_range( $ec_params_r->{p} );
+        $blind = BN_new();
+        BN_rand_range( $blind, $ec_params_r->{p} );
         return if($blind->is_zero);
     }
 
@@ -115,7 +96,7 @@ sub blind {
 
     my $zero = BN_new();
     BN_zero($zero);
-  #  my $zero = Crypt::OpenSSL::Bignum->zero;
+ 
     my $blindedElement    = EC_POINT_new( $ec_params_r->{group} );
     EC_POINT_mul( $ec_params_r->{group}, $blindedElement, $zero, $P, $blind, $ec_params_r->{ctx} );
 
@@ -124,7 +105,10 @@ sub blind {
 
 sub evaluate {
     my ($group, $blindedElement, $skS, $ctx) = @_;
-    my $zero = Crypt::OpenSSL::Bignum->zero; 
+    
+    my $zero = BN_new();
+    BN_zero($zero);
+
     my $evaluationElement    = EC_POINT_new( $group );
     EC_POINT_mul( $group, $evaluationElement, $zero, $blindedElement, $skS, $ctx );
     return $evaluationElement;
@@ -168,11 +152,8 @@ L<https://datatracker.ietf.org/doc/draft-irtf-cfrg-voprf/>
 
 =head2 EXAMPLE
 
-    use Crypt::OpenSSL::EC;
-    use Crypt::OpenSSL::Bignum;
-    use Crypt::OpenSSL::Hash2Curve;
-    use Crypt::OpenSSL::Base::Func;
-    use Crypt::OPRF;
+    use Crypt::Utils::OpenSSL;
+    use Crypt::Utils::OPRF;
 
     my $prefix         = "VOPRF09-";
     my $mode           = 0x00;
@@ -187,7 +168,9 @@ L<https://datatracker.ietf.org/doc/draft-irtf-cfrg-voprf/>
     my $clear_cofactor_flag = 1;
 
     my $input = pack( "H*", '00' );
-    my $blind = Crypt::OpenSSL::Bignum->new_from_hex( 'f70cf205f782fa11a0d61b2f5a8a2a1143368327f3077c68a1545e9aafbba6aa' );
+
+    my $blind_bn = BN_new();
+    BN_hex2bn($blind_bn, 'f70cf205f782fa11a0d61b2f5a8a2a1143368327f3077c68a1545e9aafbba6aa');
     my $blindedElement;
     ( $blind, $blindedElement ) = blind( $input, $blind, $DSI, $group_name, $type, $hash_name, $expand_message_func, $clear_cofactor_flag );
 
@@ -197,7 +180,8 @@ L<https://datatracker.ietf.org/doc/draft-irtf-cfrg-voprf/>
     my $bn = EC_POINT_point2hex( $group, $blindedElement, 2, $ctx );
     print "$bn\n";
 
-    my $skS               = Crypt::OpenSSL::Bignum->new_from_hex( '88a91851d93ab3e4f2636babc60d6ce9d1aee2b86dece13fa8590d955a08d987' );
+    my $skS               = BN_new();
+    BN_hex2bn($skS, '88a91851d93ab3e4f2636babc60d6ce9d1aee2b86dece13fa8590d955a08d987');
     my $evaluationElement = evaluate( $group, $blindedElement, $skS, $ctx );
     my $bn_ev             = EC_POINT_point2hex( $group, $evaluationElement, 2, $ctx );
     print "$bn_ev\n";

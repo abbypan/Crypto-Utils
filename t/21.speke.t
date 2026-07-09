@@ -10,7 +10,6 @@ use List::Util qw/min/;
 
 use Test::More ;
 
-use Crypt::OpenSSL::EC;
 use Crypto::Utils::OpenSSL;
 use Crypto::Utils::SPEKE;
 

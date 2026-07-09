@@ -7,7 +7,6 @@ use warnings;
 #use lib '../lib';
 
 use Test::More ;
-use Crypt::OpenSSL::EC;
 use Crypt::OpenSSL::Bignum;
 use Crypto::Utils::OpenSSL;
 

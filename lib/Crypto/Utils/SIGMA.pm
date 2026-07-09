@@ -8,14 +8,10 @@ use warnings;
 require Exporter;
 
 use Carp;
-#use Crypt::KeyDerivation ':all';
+#use Smart::Comments;
 
 use Crypto::Utils::OpenSSL;
-#use Crypt::OpenSSL::EC;
-use Crypt::OpenSSL::Bignum;
-#use Crypt::OpenSSL::ECDSA;
 
-#use Smart::Comments;
 
 our $VERSION=0.013;
 
@@ -71,8 +67,9 @@ sub a_send_msg1 {
   # msg1: g^x, na, other_data_a
   my ( $group_name, $random_range, $point_compress_t, $pack_msg_func, $ctx, $other_data_a ) = @_;
 
-  my $na = Crypt::OpenSSL::Bignum->rand_range( $random_range );
-
+my $na = BN_new();
+  BN_rand_range($na, $random_range);
+  
 
   my $ek_key_a_r = generate_ec_key( $group_name, undef );
 
@@ -116,7 +113,8 @@ sub b_send_msg2 {
   ### b_recv_other_data_a: unpack("H*", $b_recv_other_data_a)
 
   #nb, ek
-  my $nb         = Crypt::OpenSSL::Bignum->rand_range( $random_range );
+  my $nb         = BN_new();
+  BN_rand_range($nb, $random_range);
 
   my $ek_key_b_r = generate_ec_key( $group_name, undef );
 

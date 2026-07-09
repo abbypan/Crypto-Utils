@@ -106,16 +106,23 @@ sub calculate_generator {
 sub sample_scalar {
   my ( $group, $ctx ) = @_;
 
-  #my $order =  EC_GROUP_get0_order( $group );
+ 
   my $order = BN_new();
   EC_GROUP_get_order($group, $order, $ctx);
 
-  my $two = Crypt::OpenSSL::Bignum->new_from_word( 2 );
-  $order->sub( $two );
+  my $two = BN_new();
+  BN_hex2bn($two, "02");
+ 
+  BN_sub( $order, $order, $two );
 
-  my $rnd = Crypt::OpenSSL::Bignum->rand_range( $order );
-  my $one = Crypt::OpenSSL::Bignum->one;
-  $rnd->add( $one );
+my $rnd = BN_new();
+BN_rand_range($rnd, $order);
+
+
+  my $one = BN_new();
+  BN_hex2bn($one, "01");
+  BN_add( $rnd, $rnd, $one );
+  #$rnd->add( $one );
 
   return $rnd;
 }
@@ -125,7 +132,7 @@ sub scalar_mult {
 
   $rnd = sample_scalar( $group, $ctx ) unless ( $rnd );
 
-  #my $zero = Crypt::OpenSSL::Bignum->zero;
+ 
 
   my $zero = BN_new();
   BN_zero($zero);
@@ -142,15 +149,23 @@ sub scalar_mult_vfy {
   return if EC_POINT_is_at_infinity( $group, $P );
   return unless EC_POINT_is_on_curve( $group, $P, $ctx );
 
-  my $zero = Crypt::OpenSSL::Bignum->zero;
+  my $zero = BN_new();
+  BN_zero($zero);
+
+ 
   my $R    = EC_POINT_new( $group );
   EC_POINT_mul( $group, $R, $zero, $P, $rnd, $ctx );
 
   return if EC_POINT_is_at_infinity( $group, $R );
   return unless EC_POINT_is_on_curve( $group, $R, $ctx );
 
-  my $x = Crypt::OpenSSL::Bignum->zero;
-  my $y = Crypt::OpenSSL::Bignum->zero;
+ my $x = BN_new();
+  BN_zero($x);
+
+  my $y = BN_new();
+  BN_zero($y);
+
+ 
   EC_POINT_get_affine_coordinates( $group, $R, $x, $y, $ctx );
   return $x;
 } ## end sub scalar_mult_vfy
@@ -248,8 +263,8 @@ L<https://datatracker.ietf.org/doc/draft-irtf-cfrg-cpace/>
 
 =head2 EXAMPLE
 
-    use Crypt::OpenSSL::EC;
-    use Crypto::Utils::OpenSSL qw/expand_message_xmd/;
+    
+    use Crypto::Utils::OpenSSL;
     use Crypto::Utils::CPace;
 
     # a, b with same info

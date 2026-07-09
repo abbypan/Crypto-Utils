@@ -6,13 +6,8 @@ use warnings;
 
 #use bigint;
 
-#use Crypt::Digest qw/digest_data/;
-#use Crypt::Mac::HMAC qw/hmac/;
-
-#use Crypt::ScryptKDF qw/scrypt_raw/;
 use Crypto::Utils::OpenSSL;
-use Crypt::OpenSSL::EC;
-use Crypt::OpenSSL::Bignum;
+
 
 our $VERSION=0.03;
 
@@ -55,9 +50,9 @@ sub new {
   $opt{hash_name}  //= 'SHA256';
 
   $opt{nid}   //= OBJ_sn2nid( $opt{curve_name} );
-  $opt{group} //= Crypt::OpenSSL::EC::EC_GROUP::new_by_curve_name( $opt{nid} );
+  $opt{group} //= EC_GROUP_new_by_curve_name( $opt{nid} );
     
-  $opt{ctx} = Crypt::OpenSSL::Bignum::CTX->new();
+  $opt{ctx} = BN_CTX_new();
   
   if(! defined $opt{order}) {
   $opt{order} = BN_new();
@@ -127,9 +122,10 @@ sub bmod_w0_w1 {
 
   my ( $self, $w ) = @_;
 
-  my $ctx = Crypt::OpenSSL::Bignum::CTX->new();
-  my $out = Crypt::OpenSSL::Bignum->new_from_hex('0');
-  $out = $w->mod( $self->{order}, $ctx );
+  my $ctx = BN_CTX_new();
+  my $out = BN_new();
+  BN_zero($out);
+  BN_mod($out, $w, $self->{order}, $ctx);
 
   return $out;
 }
@@ -141,13 +137,15 @@ sub bmod_w0_w1_alt {
 
   my ( $self, $w ) = @_;
 
-  my $ctx = Crypt::OpenSSL::Bignum::CTX->new();
-  my $one = Crypt::OpenSSL::Bignum->one();
+  my $ctx = BN_CTX_new();
+  my $one = BN_new();
+  BN_one($one);
 
-  my $out   = Crypt::OpenSSL::Bignum->new_from_hex('0');
-  $out = $self->{order}->sub( $one );
-  $out = $w->mod( $out, $ctx );
-  $out = $out->add( $one );
+  my $out   = BN_new();
+  BN_zero($out);
+  BN_sub($out, $self->{order}, $one);
+  BN_mod($out, $w, $out, $ctx);
+  BN_add($out, $out, $one);
 
   return $out;
 }
@@ -165,10 +163,12 @@ sub calc_w0_w1 {
 
   my ( $w0s, $w1s ) = $self->split_key( $okm );
 
-  my $w0_bn = hex2bn( unpack( "H*", $w0s ) );
+  my $w0_bn = BN_new();
+  BN_hex2bn($w0_bn, unpack( "H*", $w0s ) );
   my $w0    = $bmod_w0_w1_sub->( $self, $w0_bn );
 
-  my $w1_bn = hex2bn( unpack( "H*", $w1s ) );
+  my $w1_bn = BN_new();
+  BN_hex2bn($w1_bn, unpack( "H*", $w1s ) );
   my $w1    = $bmod_w0_w1_sub->( $self, $w1_bn );
 
   return ( $w0, $w1 );
@@ -179,7 +179,8 @@ sub calc_L {
   # A, B: w0, w1, L = w1*P
   my ( $self, $w1_bn ) = @_;
 
-  my $zero = Crypt::OpenSSL::Bignum->new_from_hex( '0' );
+  my $zero = BN_new();
+  BN_zero($zero);
   my $temp = EC_POINT_new( $self->{group} );
   my $L    = mul_ec_point( $self->{curve_name}, $w1_bn, $temp, $zero );
   return $L;
@@ -190,10 +191,9 @@ sub random_le_p {
   # G has order p*h
   my ( $self ) = @_;
 
-  #my $p        = $self->{curve_hr}->{n};           #order of P
-  #my $r        = Crypt::Perl::Math::randint( $p );
-  #my $random_bn = Crypt::OpenSSL::Bignum->rand_range($range);
-  my $r;
+  my $r = BN_new();
+  BN_rand_range($r, $self->{order});
+  
   return $r;
 }
 
@@ -229,8 +229,9 @@ sub A_calc_ZV {
 
   #return unless ( $self->is_X_or_Y_suitable( $Y ) );
 
-  my $zero = Crypt::OpenSSL::Bignum->new_from_hex( '0' );
-  my $ctx  = Crypt::OpenSSL::Bignum::CTX->new();
+  my $zero = BN_new();
+  BN_zero($zero);
+  my $ctx  = BN_CTX_new();
 
   my $temp = mul_ec_point( $self->{curve_name}, $zero, $self->{N}, $w0 );
   EC_POINT_invert( $self->{group}, $temp, $ctx );
@@ -252,8 +253,9 @@ sub B_calc_ZV {
 
   #return unless ( $self->is_X_or_Y_suitable( $X ) );
 
-  my $zero = Crypt::OpenSSL::Bignum->new_from_hex( '0' );
-  my $ctx  = Crypt::OpenSSL::Bignum::CTX->new();
+  my $zero = BN_new();
+  BN_zero($zero);
+  my $ctx  = BN_CTX_new();
 
   my $temp = mul_ec_point( $self->{curve_name}, $zero, $self->{M}, $w0 );
   EC_POINT_invert( $self->{group}, $temp, $ctx );
@@ -369,8 +371,10 @@ L<https://www.potaroo.net/ietf/ids/draft-bar-cfrg-spake2plus-03.html>
     my $B = 'server';
 
     #bigint: w0, w1
-    my $w0 = Crypt::OpenSSL::Bignum->new_from_hex( 'e6887cf9bdfb7579c69bf47928a84514b5e355ac034863f7ffaf4390e67d798c' );
-    my $w1 = Crypt::OpenSSL::Bignum->new_from_hex( '24b5ae4abda868ec9336ffc3b78ee31c5755bef1759227ef5372ca139b94e512' );
+    my $w0 = BN_new();
+    BN_hex2bn($w0, 'e6887cf9bdfb7579c69bf47928a84514b5e355ac034863f7ffaf4390e67d798c' );
+    my $w1 = BN_new();
+    BN_hex2bn($w1, '24b5ae4abda868ec9336ffc3b78ee31c5755bef1759227ef5372ca139b94e512' );
 
 
 =head1 FUNCTION

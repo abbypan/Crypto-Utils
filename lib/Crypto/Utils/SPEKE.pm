@@ -92,7 +92,6 @@ L<https://arxiv.org/pdf/1802.04900>
 =head2 EXAMPLE
 
 
-	use Crypt::OpenSSL::EC;
 	use Crypto::Utils::OpenSSL;
 	use Crypto::Utils::SPEKE;
 

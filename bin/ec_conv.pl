@@ -7,7 +7,6 @@ use Encode::Locale;
 use Encode;
 use Getopt::Long qw(:config no_ignore_case);
 use Crypto::Utils::OpenSSL;
-use Crypt::OpenSSL::EC;
 use Crypt::OpenSSL::Bignum;
 #use Data::Dumper;
 

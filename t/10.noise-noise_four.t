@@ -8,7 +8,6 @@ use Test::More;
 
 #use Smart::Comments;
 
-use Crypt::OpenSSL::EC;
 use Crypt::OpenSSL::Bignum;
 #use Crypto::Utils::OpenSSL;
 use Crypto::Utils::OpenSSL;

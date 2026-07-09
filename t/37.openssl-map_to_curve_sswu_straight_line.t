@@ -2,7 +2,6 @@ use strict;
 use warnings;
 
 use Test::More ;
-use Crypt::OpenSSL::EC;
 use Crypt::OpenSSL::Bignum;
 use Crypto::Utils::OpenSSL;
 
@@ -11,7 +10,7 @@ my $r = get_ec_params($group_name);
 my ($p, $a, $b ) = @{$r}{qw/ p a b /};
 my $nid = OBJ_sn2nid($group_name);
 print "$group_name nid: $nid\n";
-my $group = Crypt::OpenSSL::EC::EC_GROUP::new_by_curve_name($nid);
+my $group = EC_GROUP_new_by_curve_name($nid);
 my $ctx   = Crypt::OpenSSL::Bignum::CTX->new();
 #my $p = Crypt::OpenSSL::Bignum->zero;
 #my $a = Crypt::OpenSSL::Bignum->zero;

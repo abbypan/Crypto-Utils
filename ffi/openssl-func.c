@@ -31,36 +31,6 @@ BF_EXPORT bool is_empty(unsigned char *s) {
   return false;
 }
 
-BF_EXPORT unsigned char *point2hex(unsigned char *group_name, EC_POINT *P,
-                                   int conv_form) {
-  int nid = OBJ_txt2nid(group_name);
-  EC_GROUP *group = EC_GROUP_new_by_curve_name(nid);
-
-  BN_CTX *ctx = BN_CTX_new();
-
-  unsigned char *s = EC_POINT_point2hex(group, P, conv_form, ctx);
-
-  EC_GROUP_free(group);
-  BN_CTX_free(ctx);
-
-  return s;
-}
-
-BF_EXPORT EC_POINT *hex2point(unsigned char *group_name,
-                              unsigned char *point_hex) {
-  int nid = OBJ_txt2nid(group_name);
-  EC_GROUP *group = EC_GROUP_new_by_curve_name(nid);
-
-  BN_CTX *ctx = BN_CTX_new();
-
-  EC_POINT *ec_point = EC_POINT_new(group);
-  ec_point = EC_POINT_hex2point(group, point_hex, ec_point, ctx);
-
-  BN_CTX_free(ctx);
-
-  return ec_point;
-}
-
 BF_EXPORT void hexdump(unsigned char *info, unsigned char *buf, const int num) {
   int i;
   printf("\n%s, %d\n", info, num);
@@ -658,68 +628,6 @@ size_t calc_ec_pub_from_priv(unsigned char *group_name, BIGNUM *priv_bn,
   EC_POINT_free(ec_pub_point);
   EC_GROUP_free(group);
   return pubkey_len;
-}
-
-BF_EXPORT int clear_cofactor(EC_GROUP *group, EC_POINT *P, EC_POINT *Q,
-                             BN_CTX *ctx) {
-  const BIGNUM *cofactor = EC_GROUP_get0_cofactor(group);
-  // P = 0*Base + cofactor * Q
-  EC_POINT_mul(group, P, NULL, Q, cofactor, ctx);
-  return 1;
-}
-
-BF_EXPORT EC_POINT *mul_ec_point(unsigned char *group_name, BIGNUM *x,
-                                 EC_POINT *Q, BIGNUM *y) {
-  int nid = OBJ_txt2nid(group_name);
-
-  EC_GROUP *group = EC_GROUP_new_by_curve_name(nid);
-  BN_CTX *ctx = BN_CTX_new();
-
-  EC_POINT *P = EC_POINT_new(group);
-  EC_POINT_mul(group, P, x, Q, y, ctx);
-
-err:
-  EC_GROUP_free(group);
-  BN_CTX_free(ctx);
-
-  return P;
-}
-
-BF_EXPORT EC_POINT *
-gen_ec_point(unsigned char *group_name, BIGNUM *x_bn, BIGNUM *y_bn,
-             int clear_cofactor_flag
-             // unsigned char* x, size_t x_len, unsigned char *y, size_t y_len
-) {
-
-  int nid = OBJ_txt2nid(group_name);
-
-  EC_GROUP *group = EC_GROUP_new_by_curve_name(nid);
-  BN_CTX *ctx = BN_CTX_new();
-
-  EC_POINT *Q = EC_POINT_new(group);
-
-  // BIGNUM *x_bn = BN_bin2bn(x, x_len, NULL);
-  // BIGNUM *y_bn = BN_bin2bn(y, y_len, NULL);
-
-  EC_POINT_set_affine_coordinates(group, Q, x_bn, y_bn, ctx);
-
-  if (clear_cofactor_flag) {
-    EC_POINT *P = EC_POINT_new(group);
-    clear_cofactor(group, P, Q, ctx);
-    EC_POINT_free(Q);
-    Q = P;
-  }
-
-  // printf("point2hex::: %s\n", EC_POINT_point2hex(group, Q, 4, ctx));
-
-  EC_GROUP_free(group);
-  BN_CTX_free(ctx);
-  // OPENSSL_free(x_bn);
-  // OPENSSL_free(y_bn);
-
-  return Q;
-  // int EC_POINT_set_affine_coordinates(const EC_GROUP *group, EC_POINT *p,
-  // const BIGNUM *x, const BIGNUM *y, BN_CTX *ctx);
 }
 
 BF_EXPORT EVP_PKEY *gen_ec_key(unsigned char *group_name,
