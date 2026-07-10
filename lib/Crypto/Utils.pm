@@ -6,9 +6,9 @@ use warnings;
 
 require Exporter;
 
-our $VERSION=0.003;
+our $VERSION = 0.003;
 
-our @ISA    = qw(Exporter);
+our @ISA = qw(Exporter);
 
 1;
 

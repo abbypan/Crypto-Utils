@@ -1,9 +1,10 @@
 use strict;
 use warnings;
 
-use Test::More ;
+use Test::More;
 use Crypto::Utils::OpenSSL;
 use Crypto::Utils::Hash2Curve;
+
 #use Data::Dump qw/dump/;
 
 #blind: x, dst, P= hash_to_group(x, dst), blind, blinded_element
@@ -17,20 +18,25 @@ use Crypto::Utils::Hash2Curve;
 #0xa0e1e2b7d6676136224e19c9fdd495d91f49bfe5e8a192e712f065a448e52d28
 #0xac1a5902e93b42100833f0de44730045474d9b527e605593b3be73248a90d3e8
 
+my $msg = 'CorrectHorseBatteryStaple';
+my $DST = 'HashToGroup-VOPRF09-' . pack( "H*", '000003' );
 
-my $msg='CorrectHorseBatteryStaple';
-my $DST = 'HashToGroup-VOPRF09-'.pack("H*", '000003');
 #my $DST = 'HashToGroup-VOPRF09-'.pack("H*", '000003').'P256_XMD:SHA-256_SSWU_RO_';
 
 my $group_name = "prime256v1";
-my $type = 'sswu';
+my $type       = 'sswu';
+
 #my $P = hash_to_curve($msg, $DST, $group_name, $type, 'SHA256', \&Crypto::Utils::OpenSSL::expand_message_xmd , 0 );
-my $P = hash_to_curve($msg, $DST, $group_name, $type, 'SHA256', \&expand_message_xmd , 1 );
+my $P = hash_to_curve( $msg, $DST, $group_name, $type, 'SHA256',
+    \&expand_message_xmd, 1 );
 
-my $bn = sn_point2hex($group_name, $P, 4);
+my $bn = sn_point2hex( $group_name, $P, 4 );
 print $bn, "\n";
-is($bn, '04EF4001E3FBA24CDB34A89F18D61F79400B9D8FBE475C14E909929052B85303979CF8DC0CB7696C82BB4580295C97C01F28C6D30E9F667A5858B9660E11014669', 'hash_to_curve');
-
+is(
+    $bn,
+'04EF4001E3FBA24CDB34A89F18D61F79400B9D8FBE475C14E909929052B85303979CF8DC0CB7696C82BB4580295C97C01F28C6D30E9F667A5858B9660E11014669',
+    'hash_to_curve'
+);
 
 done_testing;
 

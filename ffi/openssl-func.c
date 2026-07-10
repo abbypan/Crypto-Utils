@@ -81,19 +81,16 @@ BF_EXPORT BIGNUM *hex2bn(unsigned char *a) {
   return bn_a;
 }
 
-BF_EXPORT BIGNUM* bn_value_one(void)
-{
-    return BN_dup(BN_value_one());
+BF_EXPORT BIGNUM* bn_value_one(void) {
+  return BN_dup(BN_value_one());
 }
 
-BF_EXPORT int bn_one(BIGNUM *a)
-{
-    return BN_one(a);
+BF_EXPORT int bn_one(BIGNUM *a) {
+  return BN_one(a);
 }
 
-BF_EXPORT void bn_zero(BIGNUM *a)
-{
-    BN_zero(a);
+BF_EXPORT void bn_zero(BIGNUM *a) {
+  BN_zero(a);
 }
 
 BF_EXPORT int bn2bin(const BIGNUM *a, unsigned char **to) {
@@ -132,8 +129,8 @@ BF_EXPORT BIGNUM *get_pkey_bn_param(EVP_PKEY *pkey, unsigned char *param_name) {
 }
 
 BF_EXPORT size_t get_pkey_octet_string_param(EVP_PKEY *pkey,
-                                             unsigned char *param_name,
-                                             unsigned char **s) {
+    unsigned char *param_name,
+    unsigned char **s) {
   size_t s_len;
 
   EVP_PKEY_get_octet_string_param(pkey, param_name, NULL, 0, &s_len);
@@ -144,7 +141,7 @@ BF_EXPORT size_t get_pkey_octet_string_param(EVP_PKEY *pkey,
 }
 
 BF_EXPORT unsigned char *get_pkey_utf8_string_param(EVP_PKEY *pkey,
-                                                    unsigned char *param_name) {
+    unsigned char *param_name) {
   unsigned char *s = NULL;
   size_t s_len;
 
@@ -212,9 +209,9 @@ BF_EXPORT size_t rsa_oaep_encrypt(unsigned char *digest_name, EVP_PKEY *pub,
 
   OSSL_PARAM params[3];
   params[0] = OSSL_PARAM_construct_utf8_string(OSSL_ASYM_CIPHER_PARAM_PAD_MODE,
-                                               OSSL_PKEY_RSA_PAD_MODE_OAEP, 0);
+              OSSL_PKEY_RSA_PAD_MODE_OAEP, 0);
   params[1] = OSSL_PARAM_construct_utf8_string(
-      OSSL_ASYM_CIPHER_PARAM_OAEP_DIGEST, digest_name, 0);
+                OSSL_ASYM_CIPHER_PARAM_OAEP_DIGEST, digest_name, 0);
   params[2] = OSSL_PARAM_construct_end();
 
   ctx = EVP_PKEY_CTX_new_from_pkey(libctx, pub, propq);
@@ -243,9 +240,9 @@ BF_EXPORT size_t rsa_oaep_decrypt(unsigned char *digest_name, EVP_PKEY *priv,
 
   OSSL_PARAM params[3];
   params[0] = OSSL_PARAM_construct_utf8_string(OSSL_ASYM_CIPHER_PARAM_PAD_MODE,
-                                               OSSL_PKEY_RSA_PAD_MODE_OAEP, 0);
+              OSSL_PKEY_RSA_PAD_MODE_OAEP, 0);
   params[1] = OSSL_PARAM_construct_utf8_string(
-      OSSL_ASYM_CIPHER_PARAM_OAEP_DIGEST, digest_name, 0);
+                OSSL_ASYM_CIPHER_PARAM_OAEP_DIGEST, digest_name, 0);
   params[2] = OSSL_PARAM_construct_end();
 
   ctx = EVP_PKEY_CTX_new_from_pkey(libctx, priv, propq);
@@ -373,8 +370,8 @@ BF_EXPORT unsigned char *read_ec_pubkey(EVP_PKEY *pkey, int compressed_flag) {
   unsigned char *phex = NULL;
   if (compressed_flag) {
     EVP_PKEY_set_utf8_string_param(
-        pkey, OSSL_PKEY_PARAM_EC_POINT_CONVERSION_FORMAT,
-        OSSL_PKEY_EC_POINT_CONVERSION_FORMAT_COMPRESSED);
+      pkey, OSSL_PKEY_PARAM_EC_POINT_CONVERSION_FORMAT,
+      OSSL_PKEY_EC_POINT_CONVERSION_FORMAT_COMPRESSED);
   }
 
   phex = read_pubkey(pkey);
@@ -527,7 +524,7 @@ BF_EXPORT int hkdf(int mode, unsigned char *digest_name, unsigned char *ikm,
   /*kctx = EVP_KDF_CTX_new(kdf);*/
   *p++ = OSSL_PARAM_construct_int(OSSL_KDF_PARAM_MODE, &mode);
   *p++ =
-      OSSL_PARAM_construct_utf8_string(OSSL_KDF_PARAM_DIGEST, digest_name, 0);
+    OSSL_PARAM_construct_utf8_string(OSSL_KDF_PARAM_DIGEST, digest_name, 0);
   *p++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_KEY, ikm, ikm_len);
   *p++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_INFO, info, info_len);
   *p++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_SALT, salt, salt_len);
@@ -575,15 +572,15 @@ BF_EXPORT int scrypt(unsigned char *pass, size_t pass_len, unsigned char *salt,
   }
 
   *param_ptr++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_PASSWORD,
-                                                   pass, pass_len);
+                 pass, pass_len);
   *param_ptr++ =
-      OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_SALT, salt, salt_len);
+    OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_SALT, salt, salt_len);
   *param_ptr++ = OSSL_PARAM_construct_uint64(OSSL_KDF_PARAM_SCRYPT_N, &n);
   *param_ptr++ = OSSL_PARAM_construct_uint32(OSSL_KDF_PARAM_SCRYPT_R, &r);
   *param_ptr++ = OSSL_PARAM_construct_uint32(OSSL_KDF_PARAM_SCRYPT_P, &p);
   if (maxmem > 0) {
     *param_ptr++ =
-        OSSL_PARAM_construct_uint64(OSSL_KDF_PARAM_SCRYPT_MAXMEM, &maxmem);
+      OSSL_PARAM_construct_uint64(OSSL_KDF_PARAM_SCRYPT_MAXMEM, &maxmem);
   }
   *param_ptr = OSSL_PARAM_construct_end();
 
@@ -689,7 +686,7 @@ BF_EXPORT EVP_PKEY *gen_ec_key(unsigned char *group_name,
     unsigned char *pubkey;
     pubkey_len = calc_ec_pub_from_priv(group_name, priv_bn, &pubkey);
     *p++ = OSSL_PARAM_construct_octet_string(OSSL_PKEY_PARAM_PUB_KEY, pubkey,
-                                             pubkey_len);
+           pubkey_len);
 
     BN_free(priv_bn);
   }
@@ -735,9 +732,9 @@ BF_EXPORT EVP_PKEY *gen_ec_pubkey(unsigned char *group_name,
 
   OSSL_PARAM params[3];
   params[0] = OSSL_PARAM_construct_utf8_string(OSSL_PKEY_PARAM_GROUP_NAME,
-                                               (char *)group_name, 0);
+              (char *)group_name, 0);
   params[1] = OSSL_PARAM_construct_octet_string(OSSL_PKEY_PARAM_PUB_KEY, point,
-                                                point_len);
+              point_len);
   params[2] = OSSL_PARAM_construct_end();
 
   /*EVP_PKEY_CTX_set_params(pctx, params);*/
@@ -794,7 +791,7 @@ BF_EXPORT EVP_PKEY *export_ec_pubkey(EVP_PKEY *priv_pkey) {
 }
 
 BF_EXPORT unsigned char *write_key_to_der(unsigned char *dst_fname,
-                                          EVP_PKEY *pkey) {
+    EVP_PKEY *pkey) {
   BIO *out;
   out = BIO_new_file(dst_fname, "w+");
 
@@ -806,7 +803,7 @@ BF_EXPORT unsigned char *write_key_to_der(unsigned char *dst_fname,
 }
 
 BF_EXPORT unsigned char *write_key_to_pem(unsigned char *dst_fname,
-                                          EVP_PKEY *pkey) {
+    EVP_PKEY *pkey) {
   BIO *out;
   out = BIO_new_file(dst_fname, "w+");
 
@@ -818,7 +815,7 @@ BF_EXPORT unsigned char *write_key_to_pem(unsigned char *dst_fname,
 }
 
 BF_EXPORT unsigned char *write_pubkey_to_der(unsigned char *dst_fname,
-                                             EVP_PKEY *pkey) {
+    EVP_PKEY *pkey) {
   BIO *out;
   out = BIO_new_file(dst_fname, "w+");
 
@@ -830,7 +827,7 @@ BF_EXPORT unsigned char *write_pubkey_to_der(unsigned char *dst_fname,
 }
 
 BF_EXPORT unsigned char *write_pubkey_to_pem(unsigned char *dst_fname,
-                                             EVP_PKEY *pkey) {
+    EVP_PKEY *pkey) {
   BIO *out;
   out = BIO_new_file(dst_fname, "w+");
 

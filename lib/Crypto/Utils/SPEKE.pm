@@ -15,8 +15,6 @@ use CBOR::XS qw/encode_cbor decode_cbor/;
 use Crypto::Utils::CPace
   qw/sample_scalar scalar_mult scalar_mult_vfy lexiographically_larger /;
 
-#use Smart::Comments;
-
 our $VERSION = 0.001;
 
 our @ISA    = qw(Exporter);
@@ -30,15 +28,13 @@ our @EXPORT_OK = @EXPORT;
 sub prepare_send_msg {
     my ( $group, $G, $point_hex_type, $ctx, $ID ) = @_;
 
-    my $rnd = sample_scalar($group, $ctx);
+    my $rnd = sample_scalar( $group, $ctx );
 
     my $point = EC_POINT_new($group);
     ( $point, $rnd ) = scalar_mult( $group, $G, $rnd, $ctx );
 
-    my $point_hex =
-      EC_POINT_point2hex( $group, $point, $point_hex_type,
-        $ctx );
-    my $msg = encode_cbor [ $ID, pack( "H*", $point_hex ) ];
+    my $point_hex = EC_POINT_point2hex( $group, $point, $point_hex_type, $ctx );
+    my $msg       = encode_cbor [ $ID, pack( "H*", $point_hex ) ];
 
     return ( $msg, $point, $rnd );
 }
@@ -94,6 +90,7 @@ L<https://arxiv.org/pdf/1802.04900>
 
 
 	use Crypto::Utils::OpenSSL;
+	use Crypto::Utils::Hash2Curve;
 	use Crypto::Utils::SPEKE;
 
 	# a, b with same info
