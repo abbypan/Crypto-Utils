@@ -26,9 +26,11 @@ L<Crypto::Utils>
 
 L<Crypto::Utils::OpenSSL> 
 
-=head2 Protocol
+=head2 Utils
 
 L<Crypto::Utils::CPace> 
+
+L<Crypto::Utils::Hash2Curve>
 
 L<Crypto::Utils::Noise> 
 
