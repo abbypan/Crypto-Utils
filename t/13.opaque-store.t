@@ -9,7 +9,6 @@ use lib "$FindBin::RealBin/../lib";
 
 use Test::More ;
 
-use Crypt::OpenSSL::Bignum;
 use Crypto::Utils::OpenSSL qw(BN_new BN_hex2bn BN_bn2hex expand_message_xmd hmac);
 
 use Crypto::Utils::OPRF;

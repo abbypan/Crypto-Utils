@@ -2,18 +2,18 @@ use strict;
 use warnings;
 
 use Test::More ;
-use Crypt::OpenSSL::Bignum;
 use Crypto::Utils::OpenSSL;
 
 my $group_name = "prime256v1";
 my $nid = OBJ_sn2nid($group_name);
 print "$group_name nid: $nid\n";
 my $group = EC_GROUP_new_by_curve_name($nid);
-my $ctx   = Crypt::OpenSSL::Bignum::CTX->new();
-my $p = Crypt::OpenSSL::Bignum->zero;
-my $a = Crypt::OpenSSL::Bignum->zero;
-my $b = Crypt::OpenSSL::Bignum->zero;
-my $z = Crypt::OpenSSL::Bignum->new_from_decimal('-10');
+my $ctx   = BN_CTX_new();
+my $p = BN_new(); BN_zero($p);
+my $a = BN_new(); BN_zero($a);
+my $b = BN_new(); BN_zero($b);
+my $z = BN_new();
+BN_dec2bn($z, '-10');
 #$group->get_order( $order, $ctx );
 #$group->get_curve($p, $a, $b, $ctx);
 EC_GROUP_get_curve( $group, $p, $a, $b, $ctx );
@@ -27,9 +27,9 @@ my $z_hex = BN_bn2hex($z);
 print "z: $z_hex\n";
 
 my $u_hex = 'ea083a886a38ef4d15d95bd6a4b4d65620d3c57e4ed00e09fd2d67d67afd0797';
-my $u = Crypt::OpenSSL::Bignum->new_from_hex($u_hex);
-my $x = Crypt::OpenSSL::Bignum->zero;
-my $y = Crypt::OpenSSL::Bignum->zero;
+my $u = hex2bn($u_hex);
+my $x = BN_new(); BN_zero($x);
+my $y = BN_new(); BN_zero($y);
 
 map_to_curve_sswu_not_straight_line($p, $a, $b, $z, $u, $x, $y, $ctx);
 print "u: $u_hex\n";

@@ -8,7 +8,6 @@ use Test::More ;
 #use lib '../lib';
 #use Digest::SHA qw/sha256/;
 use List::Util qw/min/;
-use Crypt::OpenSSL::Bignum;
 use Crypto::Utils::OpenSSL;
 use Crypto::Utils::CPace ;
 

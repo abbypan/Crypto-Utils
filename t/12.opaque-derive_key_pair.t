@@ -7,7 +7,6 @@ use warnings;
 #use Digest::SHA qw/sha256/;
 #use List::Util qw/min/;
 use Test::More ;
-use Crypt::OpenSSL::Bignum;
 use Crypto::Utils::OpenSSL;
 use Crypto::Utils::OPRF ;
 #use Data::Dump qw/dump/;

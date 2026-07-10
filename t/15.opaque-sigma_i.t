@@ -24,7 +24,6 @@ use Crypto::Utils::SIGMA;
 #use Crypt::AuthEnc::GCM qw(gcm_encrypt_authenticate gcm_decrypt_verify);
 
 use Crypto::Utils::OpenSSL;
-use Crypt::OpenSSL::Bignum;
 #use Crypt::OpenSSL::ECDSA;
 
 use Crypto::Utils::OPRF;
@@ -41,7 +40,7 @@ my $context_string = creat_context_string($prefix, $mode, $suite_id);
 my $DST = "HashToGroup-".$context_string;
 
 my $pwd = 'CorrectHorseBatteryStaple';
-my $blind = Crypt::OpenSSL::Bignum->new_from_hex('411bf1a62d119afe30df682b91a0a33d777972d4f2daa4b34ca527d597078153');
+my $blind = hex2bn('411bf1a62d119afe30df682b91a0a33d777972d4f2daa4b34ca527d597078153');
 my $group_name = 'prime256v1';
 my $group_params = get_ec_params( $group_name );
 my $group        = $group_params->{group};
@@ -51,7 +50,7 @@ my $hash_name = 'SHA256';
 my $expand_message_func = \&expand_message_xmd;
 
 my $req_r = create_registration_request($pwd, $blind, $DST, $group_name, $type, $hash_name, $expand_message_func, 1);
-### blind: $req_r->{blind}->to_hex
+### blind: BN_bn2hex($req_r->{blind})
 ### request.data ( blindElement.hex ):  unpack("H*", $req_r->{request}{data})
 
 is($req_r->{request}{data}, pack("H*", '02a0e1e2b7d6676136224e19c9fdd495d91f49bfe5e8a192e712f065a448e52d28'), 'create_registration_request');
@@ -84,7 +83,7 @@ my $pwd_harden_func = sub {
 };
 
 #my $Nn = 32;
-my $Nn  = Crypt::OpenSSL::Bignum->new_from_hex('a921f2a014513bd8a90e477a629794e89fec12d12206dde662ebdcf65670e51f');
+my $Nn  = hex2bn('a921f2a014513bd8a90e477a629794e89fec12d12206dde662ebdcf65670e51f');
 my $finalize_info = 'OPAQUE-DeriveAuthKeyPair';
 my $finalize_DST = "DeriveKeyPair".$context_string;
 my $mac_func = sub { hmac('SHA256', $_[1], $_[0]) };
@@ -100,8 +99,8 @@ write_pubkey_to_pem("$Bin/opaque-b_recv_a_s_pub.pem", $b_recv_a_s_pub_pkey );
 
 
 
-my $random_range     = Crypt::OpenSSL::Bignum->new_from_hex( join( "", ( 'f' ) x 32 ) );
-my $iv_range         = Crypt::OpenSSL::Bignum->new_from_hex( join( "", ( 'f' ) x 24 ) );
+my $random_range     = hex2bn( join( "", ( 'f' ) x 32 ) );
+my $iv_range         = hex2bn( join( "", ( 'f' ) x 24 ) );
 #my $group_name       = 'prime256v1';
 my $key_len          = 32;
 #my $hash_name        = 'SHA256';
@@ -110,11 +109,12 @@ my $cipher_name      = 'AES';
 
 my $enc_func = sub {
   my ( $ke, $plaintext ) = @_;
-  my $iv = Crypt::OpenSSL::Bignum->rand_range( $iv_range );
+  my $iv = BN_new();
+  BN_rand_range( $iv, $iv_range );
   my $cipher = length($ke) == 32 ? 'aes-256-gcm' : 'aes-128-gcm';
-  my $res = aead_encrypt($cipher, $plaintext, '', $ke, $iv->to_bin, 16);
-  my $cipher_info_r = [ $iv->to_bin, @$res ];
-  ### iv: $iv->to_hex
+  my $res = aead_encrypt($cipher, $plaintext, '', $ke, BN_bn2bin($iv), 16);
+  my $cipher_info_r = [ BN_bn2bin($iv), @$res ];
+  ### iv: BN_bn2hex($iv)
   ### ciphertext: unpack("H*", $res->[0])
   ### tag: unpack("H*", $res->[1])
   return $cipher_info_r;
@@ -164,7 +164,7 @@ my $sign_func = sub {
 
 # a->b { g^x, na
 my $id_a = 'alice';
-$blind = Crypt::OpenSSL::Bignum->new_from_hex('c497fddf6056d241e6cf9fb7ac37c384f49b357a221eb0a802c989b9942256c1');
+$blind = hex2bn('c497fddf6056d241e6cf9fb7ac37c384f49b357a221eb0a802c989b9942256c1');
 my $cred_req_r = create_credential_request($pwd, $blind, $DST, $group_name, $type, $hash_name, $expand_message_func, 1);
 my $other_data_a = $cred_req_r->{request}{data};
 ### $id_a
@@ -173,7 +173,7 @@ my $other_data_a = $cred_req_r->{request}{data};
 ### a_send_msg1
 my $msg1_r = a_send_msg1( $group_name, $random_range, $point_compress_t, \&encode_cbor, $ctx, $other_data_a );
 my ( $na, $ek_key_a_r, $msg1 ) = @{$msg1_r}{qw/na x_r msg1/};
-### na: $na->to_hex
+### na: BN_bn2hex($na)
 
 my ( $ek_a, $ek_a_priv, $ek_a_pub, $ek_a_pub_hex_compressed, $ek_a_pub_pkey, $ek_a_priv_pkey ) =
   @{$ek_key_a_r}{qw/priv_key priv_bn pub_point pub_hex pub_pkey priv_pkey/};
@@ -181,7 +181,7 @@ write_pubkey_to_pem( "$Bin/opaque-a_ek_pub.pem", $ek_a_pub_pkey  );
 ###  $ek_a_pub_hex_compressed
 
 write_key_to_pem( "$Bin/opaque-a_ek_priv.pem", $ek_a_priv_pkey  );
-###  ek_a_priv: $ek_a_priv->to_hex
+###  ek_a_priv: BN_bn2hex($ek_a_priv)
 
 ### msg1: unpack("H*", $msg1)
 # }
@@ -192,7 +192,7 @@ my $id_b          = 'bob';
 my $b_recv_msg1_r = b_recv_msg1( $group_name, $msg1, \&decode_cbor, $ctx );
 my $b_recv_other_data_a = $b_recv_msg1_r->{other_data_a};
 my $b_recv_cred_req_r =    { data => $b_recv_other_data_a }; 
-my $masking_nonce = Crypt::OpenSSL::Bignum->new_from_hex('38fe59af0df2c79f57b8780278f5ae47355fe1f817119041951c80f612fdfc6d');
+my $masking_nonce = hex2bn('38fe59af0df2c79f57b8780278f5ae47355fe1f817119041951c80f612fdfc6d');
 my $cred_res_r = create_credential_response(
 $b_recv_cred_req_r, $s_pub, $oprf_seed, $credential_identifier,"OprfKey", $upload_record->{envelope}, $upload_record->{masking_key}, 
 $masking_nonce, $Nseed, $group_name, $info, "DeriveKeyPair".$context_string, $hash_name, $expand_message_func, $point_compress_t, $pack_func, 
@@ -218,13 +218,13 @@ my ( $ek_b,      $ek_b_priv,       $ek_b_pub, $ek_b_pub_hex_compressed, $ek_b_pu
 
 ### $id_b
 ### $other_data_b
-### nb: $nb->to_hex
+### nb: BN_bn2hex($nb)
 
 write_pubkey_to_pem( "$Bin/opaque-b_ek_pub.pem", $ek_b_pub_pkey  );
 ###  $ek_b_pub_hex_compressed
 
 write_key_to_pem( "$Bin/opaque-b_ek_priv.pem", $ek_b_priv_pkey );
-###  ek_b_priv: $ek_b_priv->to_hex
+###  ek_b_priv: BN_bn2hex($ek_b_priv)
 
 ### msg2: unpack("H*", $msg2)
 # }
@@ -257,9 +257,9 @@ my $recover_r = recover_credentials($cred_req_r, $a_recv_cred_res_r, $pwd, $id_a
 
 is($recover_r->{export_key}, pack("H*", '77869b0d11debf6fc88c1d192dde9546baf528b2f70c2aea89960fc2178586da'), 'recover_credentials');
 
-is($recover_r->{c_priv}->to_hex, 'D1D280F712E4EBF3C881C686E13C281BC3A3FAB30A00411A350F4F8B7A1EA550', 'recover_credentials');
+is(BN_bn2hex($recover_r->{c_priv}), 'D1D280F712E4EBF3C881C686E13C281BC3A3FAB30A00411A350F4F8B7A1EA550', 'recover_credentials');
 
-my $a_recover_a_s_priv_pkey = gen_ec_key($group_name, $recover_r->{c_priv}->to_hex);
+my $a_recover_a_s_priv_pkey = gen_ec_key($group_name, BN_bn2hex($recover_r->{c_priv}));
 write_key_to_pem("$Bin/opaque-a_recover_c_s_priv.pem", $a_recover_a_s_priv_pkey );
 
 my $a_recover_b_s_pub_pkey = gen_ec_pubkey($group_name, unpack("H*", $recover_r->{s_pub}));
@@ -312,9 +312,9 @@ my $res_msg4 = a_recv_msg4( $mac4, $na, $a_recv_msg2_r, \&encode_cbor, $mac_func
 # }
 
 # ks {
-my $b_ks = derive_ks( $b_z, $b_recv_na, $nb->to_bin, $hash_name, $key_len );
+my $b_ks = derive_ks( $b_z, $b_recv_na, BN_bn2bin($nb), $hash_name, $key_len );
 ### b_ks: unpack("H*", $b_ks)
-my $a_ks = derive_ks( $a_recv_msg2_r->{derive_key}{z}, $na->to_bin, $a_recv_msg2_r->{nb}, $hash_name, $key_len );
+my $a_ks = derive_ks( $a_recv_msg2_r->{derive_key}{z}, BN_bn2bin($na), $a_recv_msg2_r->{nb}, $hash_name, $key_len );
 ### a_ks: unpack("H*", $a_ks)
 # }
 

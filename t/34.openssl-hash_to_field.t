@@ -11,7 +11,7 @@ my $res;
 my $cnt=1;
 my $DST = 'QUUX-V01-CS02-with-P256_XMD:SHA-256_SSWU_NU_';
 my $p_hex = 'ffffffff00000001000000000000000000000000ffffffffffffffffffffffff';
-my $p = Crypt::OpenSSL::Bignum->new_from_hex($p_hex);
+my $p = hex2bn($p_hex);
 my $m =1;
 my $k = 0x80;
 

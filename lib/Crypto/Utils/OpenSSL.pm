@@ -24,6 +24,7 @@ BN_bn2hex
 BN_hex2bn
 BN_dec2bn
 BN_bin2bn
+BN_bn2bin
 OPENSSL_free
 EC_POINT_invert
 EC_POINT_add
@@ -218,7 +219,6 @@ $crypto->attach( [ BN_add => '_BN_add' ] => [ 'opaque', 'opaque', 'opaque' ] => 
 $crypto->attach( [ BN_sub => '_BN_sub' ] => [ 'opaque', 'opaque', 'opaque' ] => 'int' );
 $crypto->attach( [ BN_div => '_BN_div' ] => [ 'opaque', 'opaque', 'opaque', 'opaque', 'opaque' ] => 'int' );
 $crypto->attach( [ BN_rand_range => '_BN_rand_range' ] => [ 'opaque', 'opaque' ] => 'int' );
-$crypto->attach( [ BN_bn2bin => '_BN_bn2bin' ] => [ 'opaque', 'opaque' ] => 'int' );
 $crypto->attach( [ EC_GROUP_get0_order => '_EC_GROUP_get0_order' ] => ['opaque'] => 'opaque' );
 $crypto->attach( [ EC_GROUP_get_order => '_EC_GROUP_get_order' ] => [ 'opaque', 'opaque', 'opaque' ] => 'int' );
 $crypto->attach( [ EC_GROUP_get_degree => '_EC_GROUP_get_degree' ] => ['opaque'] => 'int' );
@@ -258,6 +258,7 @@ $ffi->attach( [ hex2bn => '_hex2bn' ] => ['string'] => 'opaque' );
 $ffi->attach( [ bn_value_one => '_BN_value_one' ] => [] => 'opaque' );
 $ffi->attach( [ bn_one => '_BN_one' ] => ['opaque'] => 'int' );
 $ffi->attach( [ bn_zero => '_BN_zero' ] => ['opaque'] => 'void' );
+$ffi->attach( [ bn2bin => '_BN_bn2bin' ] => [ 'opaque', 'opaque*' ] => 'int' );
 $ffi->attach( 'bin2hex' => [ 'string', 'size_t' ] => 'string' );
 $ffi->attach( [ get_pkey_bn_param => '_get_pkey_bn_param' ] => [ 'opaque', 'string' ] => 'opaque' );
 $ffi->attach( [ get_pkey_octet_string_param => '_get_pkey_octet_string_param' ] => [ 'opaque', 'string', 'opaque*' ] => 'size_t' );
@@ -710,7 +711,7 @@ sub ecdsa_sign {
 sub BN_bn2bin {
     my ($bn) = @_;
     my $ptr;
-    my $len = _BN_bn2bin->( _ptr($bn), $ptr );
+    my $len = _BN_bn2bin( _ptr($bn), \$ptr );
     return _bytes_from_ptr( $ptr, $len );
 }
 

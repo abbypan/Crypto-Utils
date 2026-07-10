@@ -6,7 +6,6 @@ use lib '../lib';
 #use Digest::SHA qw/hmac_sha256 sha256/;
 
 use Test::More ;
-use Crypt::OpenSSL::Bignum;
 use Crypto::Utils::OpenSSL;
 use Crypto::Utils::OPRF;
 use Crypto::Utils::OPAQUE;
@@ -40,7 +39,7 @@ my $context_string = creat_context_string($prefix, $mode, $suite_id);
 my $DST = "HashToGroup-".$context_string;
 
 my $pwd = 'CorrectHorseBatteryStaple';
-my $blind = Crypt::OpenSSL::Bignum->new_from_hex('411bf1a62d119afe30df682b91a0a33d777972d4f2daa4b34ca527d597078153');
+my $blind = hex2bn('411bf1a62d119afe30df682b91a0a33d777972d4f2daa4b34ca527d597078153');
 my $group_name = 'prime256v1';
 my $type = 'sswu';
 my $hash_name = 'SHA256';
@@ -77,7 +76,7 @@ my $pwd_harden_func = sub {
 };
 
 #my $Nn = 32;
-my $Nn  = Crypt::OpenSSL::Bignum->new_from_hex('a921f2a014513bd8a90e477a629794e89fec12d12206dde662ebdcf65670e51f');
+my $Nn  = hex2bn('a921f2a014513bd8a90e477a629794e89fec12d12206dde662ebdcf65670e51f');
 my $finalize_info = 'OPAQUE-DeriveAuthKeyPair';
 my $finalize_DST = "DeriveKeyPair".$context_string;
 my $mac_func = sub { hmac('SHA256', $_[1], $_[0]) };
@@ -86,10 +85,10 @@ my $upload_record = $finalize_r->{record};
 ### export_key: unpack("H*", $finalize_r->{export_key})
 is($finalize_r->{record}{masking_key}, pack("H*", '26605b3dae07af6f79501f0bfad82c904b61a59fa7038d87b66b4fdac4707541'), 'finalize_registration_request');
 
-$blind = Crypt::OpenSSL::Bignum->new_from_hex('c497fddf6056d241e6cf9fb7ac37c384f49b357a221eb0a802c989b9942256c1');
+$blind = hex2bn('c497fddf6056d241e6cf9fb7ac37c384f49b357a221eb0a802c989b9942256c1');
 my $cred_req_r = create_credential_request($pwd, $blind, $DST, $group_name, $type, $hash_name, $expand_message_func, 1);
 
-my $masking_nonce = Crypt::OpenSSL::Bignum->new_from_hex('38fe59af0df2c79f57b8780278f5ae47355fe1f817119041951c80f612fdfc6d');
+my $masking_nonce = hex2bn('38fe59af0df2c79f57b8780278f5ae47355fe1f817119041951c80f612fdfc6d');
 my $cred_res_r = create_credential_response(
 $cred_req_r->{request}, $s_pub, $oprf_seed, $credential_identifier,"OprfKey", $upload_record->{envelope}, $upload_record->{masking_key}, 
 $masking_nonce, $Nseed, $group_name, $info, "DeriveKeyPair".$context_string, $hash_name, $expand_message_func, $point_compress_t, $pack_func, 

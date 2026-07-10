@@ -96,6 +96,20 @@ BF_EXPORT void bn_zero(BIGNUM *a)
     BN_zero(a);
 }
 
+BF_EXPORT int bn2bin(const BIGNUM *a, unsigned char **to) {
+  int len = BN_num_bytes(a);
+  if (len <= 0) {
+    *to = NULL;
+    return 0;
+  }
+  *to = OPENSSL_malloc(len);
+  if (*to == NULL) {
+    return -1;
+  }
+  BN_bn2bin(a, *to);
+  return len;
+}
+
 BF_EXPORT unsigned char *bin2hex(unsigned char *bin, size_t bin_len) {
 
   unsigned char *out = NULL;

@@ -3,7 +3,6 @@ use warnings;
 
 
 use Test::More ;
-use Crypt::OpenSSL::Bignum;
 use Crypto::Utils::OpenSSL;
 use Data::Dumper;
 #use Smart::Comments;
@@ -11,7 +10,7 @@ use Data::Dumper;
 my $group_name = "prime256v1";
 my $type = 'sswu';
 my $u_hex = 'ea083a886a38ef4d15d95bd6a4b4d65620d3c57e4ed00e09fd2d67d67afd0797';
-my $u = Crypt::OpenSSL::Bignum->new_from_hex($u_hex);
+my $u = hex2bn($u_hex);
 
 my $params_ref = get_hash2curve_params($group_name, $type);
 

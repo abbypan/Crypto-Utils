@@ -22,12 +22,11 @@ use Crypto::Utils::SIGMA;
 #use Crypt::AuthEnc::GCM qw(gcm_encrypt_authenticate gcm_decrypt_verify);
 
 use Crypto::Utils::OpenSSL;
-use Crypt::OpenSSL::Bignum;
 #use Crypt::OpenSSL::ECDSA;
 
 
-my $random_range     = Crypt::OpenSSL::Bignum->new_from_hex( join( "", ( 'f' ) x 32 ) );
-my $iv_range         = Crypt::OpenSSL::Bignum->new_from_hex( join( "", ( 'f' ) x 24 ) );
+my $random_range     = hex2bn( join( "", ( 'f' ) x 32 ) );
+my $iv_range         = hex2bn( join( "", ( 'f' ) x 24 ) );
 my $group_name       = 'prime256v1';
 my $key_len          = 32;
 my $hash_name        = 'SHA256';
@@ -36,11 +35,12 @@ my $point_compress_t = 2;
 
 my $enc_func = sub {
   my ( $ke, $plaintext) = @_;
-  my $iv = Crypt::OpenSSL::Bignum->rand_range( $iv_range );
+  my $iv = BN_new();
+  BN_rand_range( $iv, $iv_range );
   my $cipher = length($ke) == 32 ? 'aes-256-gcm' : 'aes-128-gcm';
-  my $res = aead_encrypt($cipher, $plaintext, '', $ke, $iv->to_bin, 16);
-  my $cipher_info_r = [ $iv->to_bin, @$res ];
-  ### iv: $iv->to_hex
+  my $res = aead_encrypt($cipher, $plaintext, '', $ke, BN_bn2bin($iv), 16);
+  my $cipher_info_r = [ BN_bn2bin($iv), @$res ];
+  ### iv: BN_bn2hex($iv)
   ### ciphertext: unpack("H*", $res->[0])
   ### tag: unpack("H*", $res->[1])
   return $cipher_info_r;
@@ -105,7 +105,7 @@ my $other_data_a = 'test_a';
 
 my $msg1_r = a_send_msg1( $group_name, $random_range, $point_compress_t, \&encode_cbor, $ctx, $other_data_a );
 my ( $na, $ek_key_a_r, $msg1 ) = @{$msg1_r}{qw/na x_r msg1/};
-### na: $na->to_hex
+### na: BN_bn2hex($na)
 
 my ( $ek_a, $ek_a_priv, $ek_a_pub, $ek_a_pub_hex_compressed, $ek_a_pub_pkey, $ek_a_priv_pkey ) =
   @{$ek_key_a_r}{qw/priv_key priv_bn pub_point pub_hex pub_pkey priv_pkey/};
@@ -209,9 +209,9 @@ my $res_msg4 = a_recv_msg4( $mac4, $na, $a_recv_msg2_r, \&encode_cbor, $mac_func
 # }
 
 # ks {
-my $b_ks = derive_ks( $b_z, $b_recv_na, $nb->to_bin, $hash_name, $key_len );
+my $b_ks = derive_ks( $b_z, $b_recv_na, BN_bn2bin($nb), $hash_name, $key_len );
 ### b_ks: unpack("H*", $b_ks)
-my $a_ks = derive_ks( $a_recv_msg2_r->{derive_key}{z}, $na->to_bin, $a_recv_msg2_r->{nb}, $hash_name, $key_len );
+my $a_ks = derive_ks( $a_recv_msg2_r->{derive_key}{z}, BN_bn2bin($na), $a_recv_msg2_r->{nb}, $hash_name, $key_len );
 ### a_ks: unpack("H*", $a_ks)
 # }
 
