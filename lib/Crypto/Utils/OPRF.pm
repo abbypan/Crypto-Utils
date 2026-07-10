@@ -117,7 +117,7 @@ sub evaluate {
 sub finalize {
     my ($group, $order, $input, $blind, $evaluationElement, $hash_name, $ctx) = @_;
 
-    my $blind_inv = $blind->mod_inverse($order, $ctx);
+    my $blind_inv = BN_mod_inverse(undef, $blind, $order, $ctx);
 
     my $unblindedElement = evaluate($group, $evaluationElement, $blind_inv, $ctx);
 

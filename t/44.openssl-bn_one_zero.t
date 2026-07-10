@@ -47,8 +47,7 @@ ok($rnd_val >= 0 && $rnd_val < 10, "BN_rand_range generated value ($rnd_val) is 
 
 # 6. Test BN_CTX_new
 my $ctx = BN_CTX_new();
-ok(defined $ctx, 'BN_CTX_new returns defined object');
-isa_ok($ctx, 'Crypt::OpenSSL::Bignum::CTX');
+ok(defined $ctx, 'BN_CTX_new returns defined pointer');
 
 # 7. Test BN_mod
 my $r = BN_new();

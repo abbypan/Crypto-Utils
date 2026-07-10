@@ -60,6 +60,7 @@ EC_GROUP_new_by_curve_name
     BN_value_one
 BN_one
 BN_zero
+BN_mod_inverse
 );
 
 our @FFIF = qw(
@@ -217,6 +218,7 @@ $crypto->attach( [ BN_CTX_new => '_BN_CTX_new' ] => [] => 'opaque' );
 $crypto->attach( [ BN_copy => '_BN_copy' ] => [ 'opaque', 'opaque' ] => 'opaque' );
 $crypto->attach( [ BN_add => '_BN_add' ] => [ 'opaque', 'opaque', 'opaque' ] => 'int' );
 $crypto->attach( [ BN_sub => '_BN_sub' ] => [ 'opaque', 'opaque', 'opaque' ] => 'int' );
+$crypto->attach( [ BN_mod_inverse => '_BN_mod_inverse' ] => [ 'opaque', 'opaque', 'opaque', 'opaque' ] => 'opaque' );
 $crypto->attach( [ BN_div => '_BN_div' ] => [ 'opaque', 'opaque', 'opaque', 'opaque', 'opaque' ] => 'int' );
 $crypto->attach( [ BN_rand_range => '_BN_rand_range' ] => [ 'opaque', 'opaque' ] => 'int' );
 $crypto->attach( [ EC_GROUP_get0_order => '_EC_GROUP_get0_order' ] => ['opaque'] => 'opaque' );
@@ -341,7 +343,7 @@ sub BN_new {
 }
 
 sub BN_CTX_new {
-    return _obj( _BN_CTX_new(), 'Crypt::OpenSSL::Bignum::CTX' );
+    return _BN_CTX_new();
 }
 
 sub BN_copy {
@@ -354,6 +356,16 @@ sub BN_add {
 
 sub BN_sub {
     return _BN_sub( map { _ptr($_) } @_ );
+}
+
+sub BN_mod_inverse {
+    my ($r, $a, $n, $ctx) = @_;
+    if (defined $r) {
+        _BN_mod_inverse( _ptr($r), _ptr($a), _ptr($n), _ptr($ctx) );
+        return $r;
+    } else {
+        return _obj( _BN_mod_inverse( undef, _ptr($a), _ptr($n), _ptr($ctx) ), 'Crypt::OpenSSL::Bignum' );
+    }
 }
 
 sub BN_mod {
