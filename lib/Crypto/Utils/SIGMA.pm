@@ -73,7 +73,7 @@ my $na = BN_new();
 
   my $ek_key_a_r = generate_ec_key( $group_name, undef );
 
-  my $msg1 = $pack_msg_func->( [ $ek_key_a_r->{pub_bin}, $na->to_bin, $other_data_a ] );
+  my $msg1 = $pack_msg_func->( [ $ek_key_a_r->{pub_bin}, BN_bn2bin($na), $other_data_a ] );
 
   return { na => $na, x_r => $ek_key_a_r, other_data_a => $other_data_a, msg1 => $msg1 };
 }
@@ -126,7 +126,7 @@ sub b_send_msg2 {
   my $b_cipher_info = gen_msg_mac_sig_enc($data_to_enc_r, $data_to_mac_r, $kr->{km}, $s_priv_b, $kr->{ke}, $pack_msg_func, $mac_func, $sign_func, $enc_func);
   ### b_cipher_info: unpack("H*", $b_cipher_info)
 
-  my $msg2 = $pack_msg_func->( [ $ek_key_b_r->{pub_bin}, $nb->to_bin, $b_cipher_info ] );
+  my $msg2 = $pack_msg_func->( [ $ek_key_b_r->{pub_bin}, BN_bn2bin($nb), $b_cipher_info ] );
 
   return { nb => $nb, y_r => $ek_key_b_r, other_data_b => $other_data_b, derive_key => $kr, msg2 => $msg2 };
 } ## end sub b_send_msg2
@@ -174,7 +174,7 @@ sub a_verify_msg2 {
 
   my $kr = $a_recv_msg2_r->{derive_key};
 
-  my $data_to_mac_r = [ 1, $msg1_r->{na}->to_bin, $a_recv_msg2_r->{id_b}, $a_recv_msg2_r->{gy}, $msg1_r->{other_data_a}, $a_recv_msg2_r->{other_data_b} ] ;
+  my $data_to_mac_r = [ 1, BN_bn2bin($msg1_r->{na}), $a_recv_msg2_r->{id_b}, $a_recv_msg2_r->{gy}, $msg1_r->{other_data_a}, $a_recv_msg2_r->{other_data_b} ] ;
 
   my $verify_res = verify_msg_mac_sig($data_to_mac_r, $a_recv_msg2_r->{sig}, $kr->{km}, $sig_pub, $pack_msg_func, $mac_func, $verify_func);
   ### $verify_res
@@ -257,8 +257,8 @@ sub b_recv_msg3 {
   ### $b_recv_id_a
 
   my $nb            = $b_send_msg2_r->{nb};
-  my $data_to_mac_r = [ 0, $nb->to_bin, $b_recv_id_a, $b_recv_msg1_r->{gx}, $b_send_msg2_r->{other_data_b}, $b_recv_msg1_r->{other_data_a} ];
-  ### nb: $nb->to_hex
+  my $data_to_mac_r = [ 0, BN_bn2bin($nb), $b_recv_id_a, $b_recv_msg1_r->{gx}, $b_send_msg2_r->{other_data_b}, $b_recv_msg1_r->{other_data_a} ];
+  ### nb: BN_bn2hex($nb)
   ### $b_recv_id_a
   ### b recv gx: unpack("H*", $b_recv_msg1_r->{gx})
 
@@ -285,7 +285,7 @@ sub b_send_msg4 {
 sub a_recv_msg4 {
   my ( $msg4, $na, $a_recv_msg2_r, $pack_msg_func, $mac_func ) = @_;
 
-  my $a_rebuild_tbm4 = $pack_msg_func->( [ 2, $na->to_bin, "ack" ] );
+  my $a_rebuild_tbm4 = $pack_msg_func->( [ 2, BN_bn2bin($na), "ack" ] );
   ### a_rebuild_tbm4: unpack("H*", $a_rebuild_tbm4)
   my $a_rebuild_mac4 = $mac_func->( $a_rebuild_tbm4, $a_recv_msg2_r->{derive_key}{km}, );
 

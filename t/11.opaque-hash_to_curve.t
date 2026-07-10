@@ -3,6 +3,7 @@ use warnings;
 
 use Test::More ;
 use Crypto::Utils::OpenSSL;
+use Crypto::Utils::Hash2Curve;
 #use Data::Dump qw/dump/;
 
 #blind: x, dst, P= hash_to_group(x, dst), blind, blinded_element

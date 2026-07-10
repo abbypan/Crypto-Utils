@@ -11,6 +11,7 @@ use List::Util qw/min/;
 use Test::More ;
 
 use Crypto::Utils::OpenSSL;
+use Crypto::Utils::Hash2Curve;
 use Crypto::Utils::SPEKE;
 
 # a, b with same info

@@ -10,6 +10,7 @@ require Exporter;
 
 
 use Crypto::Utils::OpenSSL;
+use Crypto::Utils::Hash2Curve;
 
 #use Smart::Comments;
 

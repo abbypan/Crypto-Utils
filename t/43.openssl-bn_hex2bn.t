@@ -10,8 +10,7 @@ use Crypto::Utils::OpenSSL;
 my $bn = BN_new();
 my $chars_parsed = BN_hex2bn($bn, "DEADBEEF");
 is($chars_parsed, 8, 'Parsed 8 characters');
-ok(defined $bn, 'BIGNUM object is defined');
-isa_ok($bn, 'Crypt::OpenSSL::Bignum');
+ok(defined $bn, 'BIGNUM pointer is defined');
 
 my $hex_out = BN_bn2hex($bn);
 is(lc($hex_out), 'deadbeef', 'Hex output matches original input');

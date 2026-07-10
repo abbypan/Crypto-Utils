@@ -8,8 +8,7 @@ use Crypto::Utils::OpenSSL qw(BN_value_one BN_one BN_zero BN_bn2hex BN_hex2bn BN
 
 # 1. Test BN_value_one
 my $one = BN_value_one();
-ok(defined $one, 'BN_value_one returns defined object');
-isa_ok($one, 'Crypt::OpenSSL::Bignum');
+ok(defined $one, 'BN_value_one returns defined pointer');
 is(lc(BN_bn2hex($one)), '01', 'BN_value_one is indeed 1');
 
 # 2. Test BN_one

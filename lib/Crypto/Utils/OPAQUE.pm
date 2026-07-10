@@ -66,7 +66,7 @@ sub recover_credentials {
   );
   $recover_r->{s_pub} = $s_pub;
   ### recover s_pub: unpack("H*", $s_pub)
-  ### recover c_priv:  $recover_r->{c_priv}->to_hex
+  ### recover c_priv:  BN_bn2hex($recover_r->{c_priv})
   ### recover export_key: unpack("H*", $recover_r->{export_key})
 
   return $recover_r;
@@ -94,8 +94,8 @@ sub create_credential_response {
     $hash_name, $expand_message_func, $point_compress_t
   );
 
-  my $masking_nonce_bn = ref( $Nn )  ? $Nn : random_bn( $Nn );
-  my $masking_nonce    = $masking_nonce_bn->to_bin;
+  my $masking_nonce_bn = is_bn( $Nn )  ? $Nn : random_bn( $Nn );
+  my $masking_nonce    = BN_bn2bin($masking_nonce_bn);
   ### masking_nonce: unpack("H*", $masking_nonce)
 
   #my $Npk = length($s_pub);
@@ -141,7 +141,7 @@ sub finalize_registration_request {
   my $evaluate_element = hex2point( $group_name, unpack( "H*", $response->{data} ) );
   my $randomized_pwd =
     derive_random_pwd( $request->{ec_params}, $pwd, $request->{blind}, $evaluate_element, $hash_name, $pwd_harden_func );
-  ### blind: $request->{blind}->to_hex
+  ### blind: BN_bn2hex($request->{blind})
   ### evaluate_element: unpack("H*", $response->{data})
   ### randomized_pwd: unpack("H*", $randomized_pwd)
 
@@ -197,7 +197,7 @@ sub create_registration_response {
 
   my $kU_ec_key_r = derive_key_pair( $group_name, $ikm, $info, $DST, $hash_name, $expand_message_func );
   my $kU          = $kU_ec_key_r->{priv_bn};
-  ### kU: $kU->to_hex
+  ### kU: BN_bn2hex($kU)
 
   ### $group_name
   my $blindedElement_hex = unpack( "H*", $request->{data} );
@@ -249,8 +249,8 @@ sub create_cleartext_credentials {
 sub store {
   my ( $randomized_pwd, $s_pub, $s_id, $c_id, $Nn, $Nseed, $group_name, $info, $DST, $hash_name, $expand_message_func, $mac_func ) =
     @_;
-  my $envelope_nonce_bn = ref( $Nn )? $Nn : random_bn( $Nn );
-  my $envelope_nonce    = $envelope_nonce_bn->to_bin;
+  my $envelope_nonce_bn = is_bn( $Nn )? $Nn : random_bn( $Nn );
+  my $envelope_nonce    = BN_bn2bin($envelope_nonce_bn);
 
   my $hash_func   = EVP_get_digestbyname( $hash_name );
   my $Nh          = EVP_MD_get_size( $hash_func );
@@ -275,7 +275,7 @@ sub store {
   my $c_ec_key_r = derive_key_pair( $group_name, $seed, $info, $DST, $hash_name, $expand_message_func );
   my $c_priv     = $c_ec_key_r->{priv_bn};
   my $c_pub      = $c_ec_key_r->{pub_bin};
-  ### c_priv: $c_priv->to_hex
+  ### c_priv: BN_bn2hex($c_priv)
   ### c_pub: unpack("H*", $c_pub)
 
   my $cleartext_credentials = create_cleartext_credentials( $s_pub, $c_pub, $s_id, $c_id );
@@ -315,7 +315,7 @@ sub recover {
   my $c_ec_key_r = derive_key_pair( $group_name, $seed, $info, $DST, $hash_name, $expand_message_func );
   my $c_priv     = $c_ec_key_r->{priv_bn};
   my $c_pub      = $c_ec_key_r->{pub_bin};
-  ### c_priv: $c_priv->to_hex
+  ### c_priv: BN_bn2hex($c_priv)
 
   my $cleartext_credentials = create_cleartext_credentials( $s_pub, $c_pub, $s_id, $c_id );
   my $expected_tag          = $mac_func->( $envelope->{nonce} . $cleartext_credentials, $auth_key );

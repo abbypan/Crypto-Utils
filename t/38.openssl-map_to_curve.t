@@ -4,6 +4,7 @@ use warnings;
 
 use Test::More ;
 use Crypto::Utils::OpenSSL;
+use Crypto::Utils::Hash2Curve;
 use Data::Dumper;
 #use Smart::Comments;
 

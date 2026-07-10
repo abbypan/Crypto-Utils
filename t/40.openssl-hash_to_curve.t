@@ -3,6 +3,7 @@ use warnings;
 
 use Test::More ;
 use Crypto::Utils::OpenSSL;
+use Crypto::Utils::Hash2Curve;
 #use Data::Dump qw/dump/;
 
 

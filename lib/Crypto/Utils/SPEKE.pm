@@ -10,6 +10,7 @@ require Exporter;
 
 use List::Util qw/min/;
 use Crypto::Utils::OpenSSL;
+use Crypto::Utils::Hash2Curve;
 use CBOR::XS qw/encode_cbor decode_cbor/;
 use Crypto::Utils::CPace
   qw/sample_scalar scalar_mult scalar_mult_vfy lexiographically_larger /;
@@ -65,7 +66,7 @@ sub calc_K {
       ? $msg_send_h . $msg_recv_h
       : $msg_recv_h . $msg_send_h;
 
-    my $Prepare_K = $SID . $Z->to_bin();
+    my $Prepare_K = $SID . BN_bn2bin($Z);
 
     #my $md  = EVP_get_digestbyname( $hash_name );
     my $K = digest( $hash_name, $Prepare_K );

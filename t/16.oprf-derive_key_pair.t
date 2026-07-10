@@ -30,6 +30,6 @@ my $expand_message_func = \&expand_message_xmd;
 my $ec_key_r = derive_key_pair($group_name, $seed, $info, "DeriveKeyPair".$context_string, $hash_name, $expand_message_func);
 
 #my $skS_bn = $skS->get0_private_key();
-is($ec_key_r->{priv_bn}->to_hex(), '88A91851D93AB3E4F2636BABC60D6CE9D1AEE2B86DECE13FA8590D955A08D987', 'derive_key_pair');
+is(uc(BN_bn2hex($ec_key_r->{priv_bn})), '88A91851D93AB3E4F2636BABC60D6CE9D1AEE2B86DECE13FA8590D955A08D987', 'derive_key_pair');
 
 done_testing;

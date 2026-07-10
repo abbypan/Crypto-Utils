@@ -4,7 +4,8 @@ use Test::More;
 #use Data::Dump qw/dump/;
 #use bignum;
 #use Smart::Comments;
-use Crypto::Utils::OpenSSL ;
+use Crypto::Utils::OpenSSL;
+use Crypto::Utils::Hash2Curve;
 
 my $res;
 
@@ -22,7 +23,7 @@ my $k = 0x80;
 
 my $msg='abc';
 my @res = hash_to_field( $msg, $cnt, $DST, $p, $m, $k, 'SHA256', \&expand_message_xmd );
-### res: $res[0][0]->to_hex()
-is($res[0][0]->to_hex(), "C7F96EADAC763E176629B09ED0C11992225B3A5AE99479760601CBD69C221E58", "hash_to_field");
+### res: uc(BN_bn2hex($res[0][0]))
+is(uc(BN_bn2hex($res[0][0])), "C7F96EADAC763E176629B09ED0C11992225B3A5AE99479760601CBD69C221E58", "hash_to_field");
 
 done_testing();

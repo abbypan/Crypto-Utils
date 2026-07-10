@@ -9,6 +9,7 @@ require Exporter;
 
 use List::Util qw/min/;
 use Crypto::Utils::OpenSSL;
+use Crypto::Utils::Hash2Curve;
 
 #use Smart::Comments;
 
@@ -237,7 +238,7 @@ sub prepare_ISK {
     $trans = $is_initiator ? $msg_send . $msg_recv : $msg_recv . $msg_send;
   }
 
-  my $Prepare_ISK = prefix_free_cat( $DSI.'_ISK', $sid, $K->to_bin() ) . $trans;
+  my $Prepare_ISK = prefix_free_cat( $DSI.'_ISK', $sid, BN_bn2bin($K) ) . $trans;
 
   #my $md  = EVP_get_digestbyname( $hash_name );
   my $ISK = digest( $hash_name, $Prepare_ISK );
