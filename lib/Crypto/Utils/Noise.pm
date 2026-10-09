@@ -137,11 +137,11 @@ sub noise_hkdf {
     return $out1 if ( $num_outputs == 1 );
 
     my $out2 =
-      hmac( $cnf->{hash_name}, $temp_key, $out1 || pack( "H*", "02" ) );
+      hmac( $cnf->{hash_name}, $temp_key, $out1 . pack( "H*", "02" ) );
     return ( $out1, $out2 ) if ( $num_outputs == 2 );
 
     my $out3 =
-      hmac( $cnf->{hash_name}, $temp_key, $out2 || pack( "H*", "03" ) );
+      hmac( $cnf->{hash_name}, $temp_key, $out2 . pack( "H*", "03" ) );
     return ( $out1, $out2, $out3 ) if ( $num_outputs == 3 );
 }
 
